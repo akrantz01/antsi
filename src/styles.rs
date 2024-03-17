@@ -3,6 +3,7 @@ macro_rules! colors {
         $( $color:ident $fg:literal $bg:literal ),* $(,)?
     ) => {
         /// Available standard ANSI colors
+        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         pub enum Color {
             $( $color, )*
         }
@@ -30,6 +31,7 @@ macro_rules! decorations {
         $( $decoration:ident $apply:literal $remove:literal ),* $(,)?
     ) => {
         /// Available standard ANSI text decorations
+        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         pub enum Decoration {
             $( $decoration, )*
         }
