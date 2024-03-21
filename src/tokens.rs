@@ -16,11 +16,11 @@ mod specifier;
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub(crate) struct Style {
     /// The foreground color
-    foreground: Option<Color>,
+    pub foreground: Option<Color>,
     /// The background color
-    background: Option<Color>,
+    pub background: Option<Color>,
     /// Additional text decoration (i.e. bold, italic, underline, etc.)
-    decoration: Option<Vec<Decoration>>,
+    pub decoration: Option<Vec<Decoration>>,
 }
 
 /// One or more pieces of text that either apply additional styling or inherit from the parent
