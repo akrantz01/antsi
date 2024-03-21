@@ -1,7 +1,7 @@
 /// Create a new style
 macro_rules! style {
     () => {
-        $crate::tokens::Style::default()
+        $crate::styles::Style::default()
     };
     (@internal $style:expr; fg: $color:ident ; $( $rest:tt )* ) => {{
         $style.foreground = Some($crate::styles::Color::$color);
@@ -19,7 +19,7 @@ macro_rules! style {
         $style
     };
     ( $( $rest:tt )* ) => {{
-        let mut style = $crate::tokens::Style::default();
+        let mut style = $crate::styles::Style::default();
         style!(@internal style; $( $rest )*)
     }};
 }

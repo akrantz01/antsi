@@ -1,4 +1,4 @@
-use crate::styles::{Color, Decoration};
+use crate::styles::Style;
 use nom::{
     combinator::{all_consuming, complete},
     error::{ContextError, ParseError},
@@ -10,18 +10,6 @@ mod macros;
 mod atoms;
 mod content;
 mod specifier;
-
-/// Styles that can be applied to a piece of text
-#[derive(Clone, Debug, Default)]
-#[cfg_attr(test, derive(Eq, PartialEq))]
-pub(crate) struct Style {
-    /// The foreground color
-    pub foreground: Option<Color>,
-    /// The background color
-    pub background: Option<Color>,
-    /// Additional text decoration (i.e. bold, italic, underline, etc.)
-    pub decoration: Option<Vec<Decoration>>,
-}
 
 /// One or more pieces of text that either apply additional styling or inherit from the parent
 /// styles.

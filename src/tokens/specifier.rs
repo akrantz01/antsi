@@ -1,8 +1,5 @@
-use super::{
-    atoms::{color, decoration, whitespace},
-    Style,
-};
-use crate::styles::{Color, Decoration};
+use super::atoms::{color, decoration, whitespace};
+use crate::styles::{Color, Decoration, Style};
 use nom::{
     branch::alt,
     bytes::complete::tag_no_case,

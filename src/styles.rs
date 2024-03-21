@@ -86,3 +86,15 @@ decorations! {
     Hide          8 28,
     StrikeThrough 9 29,
 }
+
+/// Styles that can be applied to a piece of text
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
+pub(crate) struct Style {
+    /// The foreground color
+    pub foreground: Option<Color>,
+    /// The background color
+    pub background: Option<Color>,
+    /// Additional text decoration (i.e. bold, italic, underline, etc.)
+    pub decoration: Option<Vec<Decoration>>,
+}
