@@ -4,7 +4,7 @@ use nom::{
     bytes::complete::is_not,
     character::complete::{char, multispace1},
     combinator::{cut, map, value, verify},
-    error::{ContextError, ParseError},
+    error::{context, ContextError, ParseError},
     multi::fold_many0,
     sequence::{pair, preceded, terminated},
     IResult,
@@ -15,15 +15,18 @@ pub(crate) fn text<'a, E>(input: &'a str) -> IResult<&'a str, Tokens, E>
 where
     E: ParseError<&'a str> + ContextError<&'a str>,
 {
-    fold_many0(fragment, Tokens::default, |mut tokens, fragment| {
-        match fragment {
-            Fragment::Literal(s) => tokens.push_str(s),
-            Fragment::EscapedCharacter(c) => tokens.push_char(c),
-            Fragment::EscapedWhitespace => {}
-            Fragment::Token(token) => tokens.push(token),
-        }
-        tokens
-    })(input)
+    context(
+        "text",
+        fold_many0(fragment, Tokens::default, |mut tokens, fragment| {
+            match fragment {
+                Fragment::Literal(s) => tokens.push_str(s),
+                Fragment::EscapedCharacter(c) => tokens.push_char(c),
+                Fragment::EscapedWhitespace => {}
+                Fragment::Token(token) => tokens.push(token),
+            }
+            tokens
+        }),
+    )(input)
 }
 
 /// A string fragment contains a fragment of text being parsed
@@ -60,10 +63,13 @@ fn styled_text<'a, E>(input: &'a str) -> IResult<&'a str, Token, E>
 where
     E: ParseError<&'a str> + ContextError<&'a str>,
 {
-    map(pair(style, content), |(style, tokens)| Token::Styled {
-        content: tokens.into(),
-        style,
-    })(input)
+    context(
+        "styled text",
+        map(pair(style, content), |(style, tokens)| Token::Styled {
+            content: tokens.into(),
+            style,
+        }),
+    )(input)
 }
 
 /// Parse the content for a piece of styled text
@@ -71,7 +77,10 @@ fn content<'a, E>(input: &'a str) -> IResult<&'a str, Tokens, E>
 where
     E: ParseError<&'a str> + ContextError<&'a str>,
 {
-    preceded(char('('), cut(terminated(text, char(')'))))(input)
+    context(
+        "content",
+        preceded(char('('), cut(terminated(text, char(')')))),
+    )(input)
 }
 
 /// Parse a non-empty block of text that doesn't include any escaped characters
@@ -85,18 +94,21 @@ fn literal_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str
 /// is done using `((`.
 fn escaped_char<'a, E>(input: &'a str) -> IResult<&'a str, Option<char>, E>
 where
-    E: ParseError<&'a str>,
+    E: ParseError<&'a str> + ContextError<&'a str>,
 {
-    preceded(
-        char('\\'),
-        cut(alt((
-            value(Some('('), char('(')),
-            value(Some(')'), char(')')),
-            value(Some('['), char('[')),
-            value(Some(']'), char(']')),
-            value(Some('\\'), char('\\')),
-            value(None, multispace1),
-        ))),
+    context(
+        "escape sequence",
+        preceded(
+            char('\\'),
+            cut(alt((
+                value(Some('('), char('(')),
+                value(Some(')'), char(')')),
+                value(Some('['), char('[')),
+                value(Some(']'), char(']')),
+                value(Some('\\'), char('\\')),
+                value(None, multispace1),
+            ))),
+        ),
     )(input)
 }
 
