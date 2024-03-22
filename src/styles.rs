@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 macro_rules! colors {
     (
         $( $color:ident $fg:literal $bg:literal ),* $(,)?
@@ -31,7 +33,7 @@ macro_rules! decorations {
         $( $decoration:ident $apply:literal $remove:literal ),* $(,)?
     ) => {
         /// Available standard ANSI text decorations
-        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub enum Decoration {
             $( $decoration, )*
         }
@@ -96,5 +98,5 @@ pub(crate) struct Style {
     /// The background color
     pub background: Option<Color>,
     /// Additional text decoration (i.e. bold, italic, underline, etc.)
-    pub decoration: Option<Vec<Decoration>>,
+    pub decoration: Option<HashSet<Decoration>>,
 }

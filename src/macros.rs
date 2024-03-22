@@ -1,3 +1,12 @@
+/// Create a new set
+macro_rules! set {
+    ( $( $value:expr ),* $(,)? ) => {{
+        let mut set = ::std::collections::HashSet::new();
+        $( set.insert($value); )+
+        set
+    }}
+}
+
 /// Create a new style
 macro_rules! style {
     () => {
@@ -12,7 +21,7 @@ macro_rules! style {
         style!(@internal $style; $( $rest ) *)
     }};
     (@internal $style:expr; deco: $( $decoration:ident ),+ ; $( $rest:tt )* ) => {{
-        $style.decoration = Some(vec![ $( $crate::styles::Decoration::$decoration, )+ ]);
+        $style.decoration = Some(set!{ $( $crate::styles::Decoration::$decoration, )+ });
         style!(@internal $style; $( $rest ) *)
     }};
     (@internal $style:expr; ) => {

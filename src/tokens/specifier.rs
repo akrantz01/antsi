@@ -10,6 +10,7 @@ use nom::{
     sequence::{preceded, separated_pair, terminated},
     IResult,
 };
+use std::collections::HashSet;
 
 /// The value of an individual style specifier
 #[derive(Debug)]
@@ -20,7 +21,7 @@ enum StyleSpecifier {
     /// Apply a background color
     Background(Color),
     /// Apply a text decoration
-    Decoration(Vec<Decoration>),
+    Decoration(HashSet<Decoration>),
 }
 
 /// Parse a sequence of style specifiers
@@ -122,7 +123,7 @@ where
                 char(':'),
                 separated_list1(char(','), cut(whitespace(decoration))),
             ),
-            |(_, decoration)| StyleSpecifier::Decoration(decoration),
+            |(_, decorations)| StyleSpecifier::Decoration(HashSet::from_iter(decorations)),
         ),
     )(input)
 }
@@ -220,23 +221,26 @@ mod test {
 
         simple_tests! {
             for decoration_specifier;
-            bold:          "deco:bold" => StyleSpecifier::Decoration(vec![Decoration::Bold]),
-            dim:           "deco:dim" => StyleSpecifier::Decoration(vec![Decoration::Dim]),
-            italic:        "deco:italic" => StyleSpecifier::Decoration(vec![Decoration::Italic]),
-            underline:     "deco:underline" => StyleSpecifier::Decoration(vec![Decoration::Underline]),
-            slow_blink:    "deco:slow-blink" => StyleSpecifier::Decoration(vec![Decoration::SlowBlink]),
-            fast_blink:    "deco:fast-blink" => StyleSpecifier::Decoration(vec![Decoration::FastBlink]),
-            invert:        "deco:invert" => StyleSpecifier::Decoration(vec![Decoration::Invert]),
-            hide:          "deco:hide" => StyleSpecifier::Decoration(vec![Decoration::Hide]),
-            strikethrough: "deco:strikethrough" => StyleSpecifier::Decoration(vec![Decoration::StrikeThrough]),
+            bold:          "deco:bold" => StyleSpecifier::Decoration(set!{Decoration::Bold}),
+            dim:           "deco:dim" => StyleSpecifier::Decoration(set!{Decoration::Dim}),
+            italic:        "deco:italic" => StyleSpecifier::Decoration(set!{Decoration::Italic}),
+            underline:     "deco:underline" => StyleSpecifier::Decoration(set!{Decoration::Underline}),
+            slow_blink:    "deco:slow-blink" => StyleSpecifier::Decoration(set!{Decoration::SlowBlink}),
+            fast_blink:    "deco:fast-blink" => StyleSpecifier::Decoration(set!{Decoration::FastBlink}),
+            invert:        "deco:invert" => StyleSpecifier::Decoration(set!{Decoration::Invert}),
+            hide:          "deco:hide" => StyleSpecifier::Decoration(set!{Decoration::Hide}),
+            strikethrough: "deco:strikethrough" => StyleSpecifier::Decoration(set!{Decoration::StrikeThrough}),
 
-            two_applied:   "deco:bold,dim" => StyleSpecifier::Decoration(vec![Decoration::Bold, Decoration::Dim]),
-            three_applied: "deco:dim,bold,italic" => StyleSpecifier::Decoration(vec![Decoration::Dim, Decoration::Bold, Decoration::Italic]),
+            two_applied:   "deco:bold,dim" => StyleSpecifier::Decoration(set!{Decoration::Bold, Decoration::Dim}),
+            three_applied: "deco:dim,bold,italic" => StyleSpecifier::Decoration(set!{Decoration::Dim, Decoration::Bold, Decoration::Italic}),
 
-            whitespace_ignored_on_tag:             "  deco  :bold" => StyleSpecifier::Decoration(vec![Decoration::Bold]),
-            whitespace_ignored_on_value:           "deco:  bold  " => StyleSpecifier::Decoration(vec![Decoration::Bold]),
-            whitespace_ignored_on_both_sides:      "  deco  :  bold  " => StyleSpecifier::Decoration(vec![Decoration::Bold]),
-            whitespace_ignored_on_multiple_values: "deco:  bold  ,  italic  " => StyleSpecifier::Decoration(vec![Decoration::Bold, Decoration::Italic]),
+            duplicates_are_ignored: "deco:bold,bold" => StyleSpecifier::Decoration(set!{Decoration::Bold}),
+            duplicates_of_different_kinds_are_ignored: "deco:bold,italic,bold,italic" => StyleSpecifier::Decoration(set!{Decoration::Bold, Decoration::Italic}),
+
+            whitespace_ignored_on_tag:             "  deco  :bold" => StyleSpecifier::Decoration(set!{Decoration::Bold}),
+            whitespace_ignored_on_value:           "deco:  bold  " => StyleSpecifier::Decoration(set!{Decoration::Bold}),
+            whitespace_ignored_on_both_sides:      "  deco  :  bold  " => StyleSpecifier::Decoration(set!{Decoration::Bold}),
+            whitespace_ignored_on_multiple_values: "deco:  bold  ,  italic  " => StyleSpecifier::Decoration(set!{Decoration::Bold, Decoration::Italic}),
         }
 
         #[test]
@@ -273,7 +277,7 @@ mod test {
             for style_specifier;
             foreground: "fg:black" => StyleSpecifier::Foreground(Color::Black),
             background: "bg:black" => StyleSpecifier::Background(Color::Black),
-            decoration: "deco:bold" => StyleSpecifier::Decoration(vec![Decoration::Bold]),
+            decoration: "deco:bold" => StyleSpecifier::Decoration(set!{Decoration::Bold}),
         }
 
         #[test]
