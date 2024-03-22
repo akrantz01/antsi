@@ -10,16 +10,16 @@ macro_rules! colors {
 
         impl Color {
             /// Convert to the foreground ANSI code
-            pub fn foreground_code(&self) -> u8 {
+            pub fn foreground_code(&self) -> &'static str {
                 match self {
-                    $( Color::$color => $fg, )*
+                    $( Color::$color => stringify!($fg), )*
                 }
             }
 
             /// Convert to the background ANSI code
-            pub fn background_code(&self) -> u8 {
+            pub fn background_code(&self) -> &'static str {
                 match self {
-                    $( Color::$color => $bg, )*
+                    $( Color::$color => stringify!($bg), )*
                 }
             }
         }
@@ -38,16 +38,16 @@ macro_rules! decorations {
 
         impl Decoration {
             /// Convert to the ANSI code for applying the styling
-            pub fn apply_code(&self) -> u8 {
+            pub fn apply_code(&self) -> &'static str {
                 match self {
-                    $( Decoration::$decoration => $apply, )*
+                    $( Decoration::$decoration => stringify!($apply), )*
                 }
             }
 
             /// Convert to the ANSI code for removing the styling
-            pub fn remove_code(&self) -> u8 {
+            pub fn remove_code(&self) -> &'static str {
                 match self {
-                    $( Decoration::$decoration => $remove, )*
+                    $( Decoration::$decoration => stringify!($remove), )*
                 }
             }
         }
