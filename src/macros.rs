@@ -1,7 +1,8 @@
 /// Create a new set
 macro_rules! set {
     ( $( $value:expr ),* $(,)? ) => {{
-        let mut set = ::std::collections::HashSet::new();
+        const CAP: usize = <[()]>::len(&[ $( { stringify!($value); } ),* ]);
+        let mut set = ::indexmap::IndexSet::with_capacity(CAP);
         $( set.insert($value); )+
         set
     }}

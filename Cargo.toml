@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 nom = "7.1"
 pyo3 = "0.20.0"
 clap = { version = "4.5.3", features = ["derive"] }
+indexmap = "2.2"

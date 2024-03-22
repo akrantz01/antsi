@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use indexmap::IndexSet;
 
 macro_rules! colors {
     (
@@ -98,5 +98,5 @@ pub(crate) struct Style {
     /// The background color
     pub background: Option<Color>,
     /// Additional text decoration (i.e. bold, italic, underline, etc.)
-    pub decoration: Option<HashSet<Decoration>>,
+    pub decoration: Option<IndexSet<Decoration>>,
 }

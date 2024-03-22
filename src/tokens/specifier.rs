@@ -1,5 +1,6 @@
 use super::atoms::{color, decoration, whitespace};
 use crate::styles::{Color, Decoration, Style};
+use indexmap::IndexSet;
 use nom::{
     branch::alt,
     bytes::complete::tag_no_case,
@@ -10,7 +11,6 @@ use nom::{
     sequence::{preceded, separated_pair, terminated},
     IResult,
 };
-use std::collections::HashSet;
 
 /// The value of an individual style specifier
 #[derive(Debug)]
@@ -21,7 +21,7 @@ enum StyleSpecifier {
     /// Apply a background color
     Background(Color),
     /// Apply a text decoration
-    Decoration(HashSet<Decoration>),
+    Decoration(IndexSet<Decoration>),
 }
 
 /// Parse a sequence of style specifiers
@@ -123,7 +123,7 @@ where
                 char(':'),
                 separated_list1(char(','), cut(whitespace(decoration))),
             ),
-            |(_, decorations)| StyleSpecifier::Decoration(HashSet::from_iter(decorations)),
+            |(_, decorations)| StyleSpecifier::Decoration(IndexSet::from_iter(decorations)),
         ),
     )(input)
 }
