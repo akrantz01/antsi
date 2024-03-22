@@ -2,12 +2,12 @@ use indexmap::IndexSet;
 
 macro_rules! colors {
     (
-        $( $color:ident $fg:literal $bg:literal ),* $(,)?
+        $( $( #[ $meta:meta ] )* $color:ident $fg:literal $bg:literal ),* $(,)?
     ) => {
         /// Available standard ANSI colors
-        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
         pub enum Color {
-            $( $color, )*
+            $( $( #[$meta] )* $color, )*
         }
 
         impl Color {
@@ -65,6 +65,7 @@ colors! {
     Magenta 35 45,
     Cyan    36 46,
     White   37 47,
+    #[default]
     Default 39 49,
 
     BrightBlack   90 100,
