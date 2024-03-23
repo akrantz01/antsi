@@ -4,10 +4,12 @@ use nom::{
     bytes::complete::tag_no_case,
     character::complete::multispace0,
     combinator::value,
-    error::{context, ContextError, ParseError},
+    error::{context, ContextError, ErrorKind, ParseError},
     sequence::delimited,
     AsChar, Compare, IResult, InputIter, InputLength, InputTake, InputTakeAtPosition, Parser,
+    Slice,
 };
+use std::ops::RangeFrom;
 
 /// Parse a [`Color`]
 pub(crate) fn color<I, E>(input: I) -> IResult<I, Color, E>
@@ -75,6 +77,22 @@ where
     E: ParseError<I>,
 {
     delimited(multispace0, inner, multispace0)
+}
+
+/// Returns an error if the input was empty, otherwise consumes the entire input
+pub(crate) fn non_empty<I, E>(input: I) -> IResult<I, I, E>
+where
+    I: InputLength + Slice<RangeFrom<usize>>,
+    E: ParseError<I>,
+{
+    let len = input.input_len();
+    match len {
+        0 => Err(nom::Err::Error(E::from_error_kind(
+            input,
+            ErrorKind::NonEmpty,
+        ))),
+        _ => Ok((input.slice(len..), input)),
+    }
 }
 
 #[cfg(test)]

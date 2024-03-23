@@ -1,28 +1,30 @@
-use super::{specifier::style, Token, Tokens};
+use super::{atoms::non_empty, specifier::style, Token, Tokens};
 use nom::{
     branch::alt,
     bytes::complete::is_not,
     character::complete::{char, multispace1},
-    combinator::{cut, map, value, verify},
+    combinator::{cut, map, recognize, value},
     error::{context, ContextError, ParseError},
     multi::fold_many0,
     sequence::{pair, preceded, terminated},
     AsChar, Compare, FindToken, IResult, InputIter, InputLength, InputTake, InputTakeAtPosition,
-    Slice,
+    Offset, Parser, Slice,
 };
-use std::{borrow::Borrow, ops::RangeFrom};
+use std::ops::{RangeFrom, RangeTo};
 
 /// Parse a piece of text into a sequence of tokens
 pub(crate) fn text<I, E>(input: I) -> IResult<I, Tokens, E>
 where
-    I: Borrow<str>
+    I: AsRef<str>
         + Clone
         + Compare<&'static str>
         + InputIter
         + InputLength
         + InputTake
         + InputTakeAtPosition
-        + Slice<RangeFrom<usize>>,
+        + Offset
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>,
     <I as InputIter>::Item: AsChar + Clone,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
@@ -35,7 +37,7 @@ where
             Tokens::default,
             |mut tokens, fragment: Fragment<I>| {
                 match fragment {
-                    Fragment::Literal(s) => tokens.push_str(s.borrow()),
+                    Fragment::Literal(s) => tokens.push_str(s.as_ref()),
                     Fragment::EscapedCharacter(c) => tokens.push_char(c),
                     Fragment::EscapedWhitespace => {}
                     Fragment::Token(token) => tokens.push(token),
@@ -63,14 +65,16 @@ enum Fragment<I> {
 /// Extract a [`Fragment`] from the input
 fn fragment<I, E>(input: I) -> IResult<I, Fragment<I>, E>
 where
-    I: Borrow<str>
+    I: AsRef<str>
         + Clone
         + Compare<&'static str>
         + InputIter
         + InputLength
         + InputTake
         + InputTakeAtPosition
-        + Slice<RangeFrom<usize>>,
+        + Offset
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>,
     <I as InputIter>::Item: AsChar + Clone,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
@@ -89,14 +93,16 @@ where
 /// Parse a segment of text with styling
 fn styled_text<I, E>(input: I) -> IResult<I, Token, E>
 where
-    I: Borrow<str>
+    I: AsRef<str>
         + Clone
         + Compare<&'static str>
         + InputIter
         + InputLength
         + InputTake
         + InputTakeAtPosition
-        + Slice<RangeFrom<usize>>,
+        + Offset
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>,
     <I as InputIter>::Item: AsChar + Clone,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
@@ -114,14 +120,16 @@ where
 /// Parse the content for a piece of styled text
 fn content<I, E>(input: I) -> IResult<I, Tokens, E>
 where
-    I: Borrow<str>
+    I: AsRef<str>
         + Clone
         + Compare<&'static str>
         + InputIter
         + InputLength
         + InputTake
         + InputTakeAtPosition
-        + Slice<RangeFrom<usize>>,
+        + Offset
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>,
     <I as InputIter>::Item: AsChar + Clone,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
@@ -136,11 +144,19 @@ where
 /// Parse a non-empty block of text that doesn't include any escaped characters
 fn literal_string<I, E>(input: I) -> IResult<I, I, E>
 where
-    I: Borrow<str> + Clone + InputIter + InputLength + InputTake + InputTakeAtPosition,
+    I: AsRef<str>
+        + Clone
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>
+        + Offset,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
     E: ParseError<I>,
 {
-    verify(is_not("()[]\\"), |s: &str| !s.is_empty())(input)
+    recognize(is_not("()[]\\").and_then(non_empty))(input)
 }
 
 /// Parse an escaped character: (, ), \[, \]

@@ -2,9 +2,10 @@ use crate::styles::Style;
 use nom::{
     combinator::{all_consuming, complete},
     error::{ContextError, ParseError},
-    AsChar, Compare, FindToken, InputIter, InputLength, InputTake, InputTakeAtPosition, Slice,
+    AsChar, Compare, FindToken, InputIter, InputLength, InputTake, InputTakeAtPosition, Offset,
+    Slice,
 };
-use std::{borrow::Borrow, ops::RangeFrom};
+use std::ops::{RangeFrom, RangeTo};
 
 #[cfg(test)]
 #[macro_use]
@@ -78,14 +79,16 @@ impl Tokens {
 /// Parse a piece of text into a sequence of [`Token`]s for processing
 pub(crate) fn tokenize<I, E>(input: I) -> Result<Vec<Token>, E>
 where
-    I: Borrow<str>
+    I: AsRef<str>
         + Clone
         + Compare<&'static str>
         + InputIter
         + InputLength
         + InputTake
         + InputTakeAtPosition
-        + Slice<RangeFrom<usize>>,
+        + Offset
+        + Slice<RangeFrom<usize>>
+        + Slice<RangeTo<usize>>,
     <I as InputIter>::Item: AsChar + Clone,
     <I as InputTakeAtPosition>::Item: AsChar + Clone,
     for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
