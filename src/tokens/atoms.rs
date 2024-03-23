@@ -6,13 +6,14 @@ use nom::{
     combinator::value,
     error::{context, ContextError, ParseError},
     sequence::delimited,
-    IResult, Parser,
+    AsChar, Compare, IResult, InputIter, InputLength, InputTake, InputTakeAtPosition, Parser,
 };
 
 /// Parse a [`Color`]
-pub(crate) fn color<'a, E>(input: &'a str) -> IResult<&'a str, Color, E>
+pub(crate) fn color<I, E>(input: I) -> IResult<I, Color, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone + InputTake + Compare<&'static str>,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "color",
@@ -39,9 +40,10 @@ where
 }
 
 /// Parse a text [`Decoration`]
-pub(crate) fn decoration<'a, E>(input: &'a str) -> IResult<&'a str, Decoration, E>
+pub(crate) fn decoration<I, E>(input: I) -> IResult<I, Decoration, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone + InputTake + Compare<&'static str>,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "decoration",
@@ -64,10 +66,13 @@ where
 }
 
 /// Eats surrounding whitespace, producing the output of the `inner` parser.
-pub(crate) fn whitespace<'a, F, O, E>(inner: F) -> impl Parser<&'a str, O, E>
+pub(crate) fn whitespace<'a, F, I, O, E>(inner: F) -> impl Parser<I, O, E>
 where
-    F: Parser<&'a str, O, E>,
-    E: ParseError<&'a str>,
+    F: Parser<I, O, E>,
+    I: Clone + InputIter + InputLength + InputTake + InputTakeAtPosition,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I>,
 {
     delimited(multispace0, inner, multispace0)
 }

@@ -7,34 +7,51 @@ use nom::{
     error::{context, ContextError, ParseError},
     multi::fold_many0,
     sequence::{pair, preceded, terminated},
-    IResult,
+    AsChar, Compare, FindToken, IResult, InputIter, InputLength, InputTake, InputTakeAtPosition,
+    Slice,
 };
+use std::{borrow::Borrow, ops::RangeFrom};
 
 /// Parse a piece of text into a sequence of tokens
-pub(crate) fn text<'a, E>(input: &'a str) -> IResult<&'a str, Tokens, E>
+pub(crate) fn text<I, E>(input: I) -> IResult<I, Tokens, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Borrow<str>
+        + Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "text",
-        fold_many0(fragment, Tokens::default, |mut tokens, fragment| {
-            match fragment {
-                Fragment::Literal(s) => tokens.push_str(s),
-                Fragment::EscapedCharacter(c) => tokens.push_char(c),
-                Fragment::EscapedWhitespace => {}
-                Fragment::Token(token) => tokens.push(token),
-            }
-            tokens
-        }),
+        fold_many0(
+            fragment,
+            Tokens::default,
+            |mut tokens, fragment: Fragment<I>| {
+                match fragment {
+                    Fragment::Literal(s) => tokens.push_str(s.borrow()),
+                    Fragment::EscapedCharacter(c) => tokens.push_char(c),
+                    Fragment::EscapedWhitespace => {}
+                    Fragment::Token(token) => tokens.push(token),
+                }
+                tokens
+            },
+        ),
     )(input)
 }
 
 /// A string fragment contains a fragment of text being parsed
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
-enum Fragment<'a> {
+enum Fragment<I> {
     /// A series of non-escaped characters
-    Literal(&'a str),
+    Literal(I),
     /// A single parsed escape character
     EscapedCharacter(char),
     /// A block of escaped whitespace
@@ -44,9 +61,20 @@ enum Fragment<'a> {
 }
 
 /// Extract a [`Fragment`] from the input
-fn fragment<'a, E>(input: &'a str) -> IResult<&'a str, Fragment<'a>, E>
+fn fragment<I, E>(input: I) -> IResult<I, Fragment<I>, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Borrow<str>
+        + Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I> + ContextError<I>,
 {
     alt((
         map(styled_text, Fragment::Token),
@@ -59,9 +87,20 @@ where
 }
 
 /// Parse a segment of text with styling
-fn styled_text<'a, E>(input: &'a str) -> IResult<&'a str, Token, E>
+fn styled_text<I, E>(input: I) -> IResult<I, Token, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Borrow<str>
+        + Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "styled text",
@@ -73,9 +112,20 @@ where
 }
 
 /// Parse the content for a piece of styled text
-fn content<'a, E>(input: &'a str) -> IResult<&'a str, Tokens, E>
+fn content<I, E>(input: I) -> IResult<I, Tokens, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Borrow<str>
+        + Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "content",
@@ -84,7 +134,12 @@ where
 }
 
 /// Parse a non-empty block of text that doesn't include any escaped characters
-fn literal_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &'a str, E> {
+fn literal_string<I, E>(input: I) -> IResult<I, I, E>
+where
+    I: Borrow<str> + Clone + InputIter + InputLength + InputTake + InputTakeAtPosition,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I>,
+{
     verify(is_not("()[]\\"), |s: &str| !s.is_empty())(input)
 }
 
@@ -92,9 +147,12 @@ fn literal_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str
 ///
 /// Characters are escaped by repeating them twice in a sequence. For example, escaping `(`
 /// is done using `((`.
-fn escaped_char<'a, E>(input: &'a str) -> IResult<&'a str, Option<char>, E>
+fn escaped_char<I, E>(input: I) -> IResult<I, Option<char>, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone + InputIter + InputLength + InputTake + InputTakeAtPosition + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "escape sequence",
@@ -398,7 +456,7 @@ mod tests {
         use crate::tokens::{content::Fragment, Token};
         use nom::{error::ErrorKind, error_position};
 
-        make_error_concrete!(fragment -> Fragment);
+        make_error_concrete!(fragment -> Fragment<&str>);
 
         simple_tests! {
             for fragment;

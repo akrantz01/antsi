@@ -9,8 +9,9 @@ use nom::{
     error::{context, ContextError, ParseError},
     multi::separated_list1,
     sequence::{preceded, separated_pair, terminated},
-    IResult,
+    AsChar, Compare, IResult, InputIter, InputLength, InputTake, InputTakeAtPosition, Slice,
 };
+use std::ops::RangeFrom;
 
 /// The value of an individual style specifier
 #[derive(Debug)]
@@ -27,9 +28,18 @@ enum StyleSpecifier {
 /// Parse a sequence of style specifiers
 ///
 /// When duplicate specifiers are encountered, the last appearing one takes precedence
-pub(crate) fn style<'a, E>(input: &'a str) -> IResult<&'a str, Style, E>
+pub(crate) fn style<'a, I, E>(input: I) -> IResult<I, Style, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "style specifiers",
@@ -60,9 +70,18 @@ where
 ///   - Foreground color: `fg`   -> [`Color`]
 ///   - Background color: `bg`   -> [`Color`]
 ///   - Text decoration:  `deco` -> [`Decoration`]
-fn style_specifier<'a, E>(input: &'a str) -> IResult<&'a str, StyleSpecifier, E>
+fn style_specifier<I, E>(input: I) -> IResult<I, StyleSpecifier, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "style specifier",
@@ -75,9 +94,18 @@ where
 }
 
 /// Parse a foreground [`Color`] specifier with the tag `fg`
-fn foreground_specifier<'a, E>(input: &'a str) -> IResult<&'a str, StyleSpecifier, E>
+fn foreground_specifier<I, E>(input: I) -> IResult<I, StyleSpecifier, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "foreground specifier",
@@ -93,9 +121,18 @@ where
 }
 
 /// Parse a background [`Color`] specifier with the tag `bg`
-fn background_specifier<'a, E>(input: &'a str) -> IResult<&'a str, StyleSpecifier, E>
+fn background_specifier<I, E>(input: I) -> IResult<I, StyleSpecifier, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "background specifier",
@@ -111,9 +148,18 @@ where
 }
 
 /// Parse a text [`Decoration`] specifier with the tag `deco`
-fn decoration_specifier<'a, E>(input: &'a str) -> IResult<&'a str, StyleSpecifier, E>
+fn decoration_specifier<I, E>(input: I) -> IResult<I, StyleSpecifier, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    E: ParseError<I> + ContextError<I>,
 {
     context(
         "decoration specifier",

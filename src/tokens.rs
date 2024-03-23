@@ -2,7 +2,9 @@ use crate::styles::Style;
 use nom::{
     combinator::{all_consuming, complete},
     error::{ContextError, ParseError},
+    AsChar, Compare, FindToken, InputIter, InputLength, InputTake, InputTakeAtPosition, Slice,
 };
+use std::{borrow::Borrow, ops::RangeFrom};
 
 #[cfg(test)]
 #[macro_use]
@@ -74,15 +76,23 @@ impl Tokens {
 }
 
 /// Parse a piece of text into a sequence of [`Token`]s for processing
-pub(crate) fn tokenize<'a, E>(input: &'a str) -> Result<Vec<Token>, E>
+pub(crate) fn tokenize<I, E>(input: I) -> Result<Vec<Token>, E>
 where
-    E: ParseError<&'a str> + ContextError<&'a str>,
+    I: Borrow<str>
+        + Clone
+        + Compare<&'static str>
+        + InputIter
+        + InputLength
+        + InputTake
+        + InputTakeAtPosition
+        + Slice<RangeFrom<usize>>,
+    <I as InputIter>::Item: AsChar + Clone,
+    <I as InputTakeAtPosition>::Item: AsChar + Clone,
+    for<'a> &'a str: FindToken<<I as InputTakeAtPosition>::Item>,
+    E: ParseError<I> + ContextError<I>,
 {
     match all_consuming(complete(content::text))(input) {
-        Ok((leftover, tokens)) => {
-            assert_eq!(leftover.len(), 0);
-            Ok(tokens.into())
-        }
+        Ok((_leftover, tokens)) => Ok(tokens.into()),
         Err(nom::Err::Error(e) | nom::Err::Failure(e)) => Err(e),
         Err(nom::Err::Incomplete(_)) => unreachable!(),
     }
