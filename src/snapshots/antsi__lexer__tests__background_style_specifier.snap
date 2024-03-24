@@ -3,17 +3,17 @@ source: src/lexer.rs
 expression: tokens
 ---
 [
-    Token {
+    Lexeme {
         kind: BackgroundSpecifier,
         text: "bg",
         span: 0..2,
     },
-    Token {
+    Lexeme {
         kind: Colon,
         text: ":",
         span: 2..3,
     },
-    Token {
+    Lexeme {
         kind: Color(
             Magenta,
         ),

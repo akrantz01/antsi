@@ -3,17 +3,17 @@ source: src/lexer.rs
 expression: tokens
 ---
 [
-    Token {
+    Lexeme {
         kind: DecorationSpecifier,
         text: "deco",
         span: 0..4,
     },
-    Token {
+    Lexeme {
         kind: Colon,
         text: ":",
         span: 4..5,
     },
-    Token {
+    Lexeme {
         kind: Decoration(
             Bold,
         ),

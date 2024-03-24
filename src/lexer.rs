@@ -15,16 +15,16 @@ impl<'source> Lexer<'source> {
 }
 
 impl<'source> Iterator for Lexer<'source> {
-    type Item = Result<Token<'source>, ()>;
+    type Item = Lexeme<'source>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let kind = self.0.next()?;
+        let kind = self.0.next()?.unwrap_or(SyntaxKind::Unknown);
 
-        Some(kind.map(|kind| Token {
+        Some(Lexeme {
             kind,
             text: self.0.slice(),
             span: self.0.span(),
-        }))
+        })
     }
 }
 
@@ -87,6 +87,8 @@ pub(crate) enum SyntaxKind {
     // tokens `:` `;` and `,` are considered stop characters for words
     #[regex(r#"[^\\\[\]():;,]+"#, priority = 2)]
     Text,
+
+    Unknown,
 }
 
 impl Display for SyntaxKind {
@@ -107,12 +109,13 @@ impl Display for SyntaxKind {
             Self::EscapeCharacter(_) => "escape character",
             Self::EscapeWhitespace => "escape whitespace",
             Self::Text => "text",
+            Self::Unknown => "unknown",
         })
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct Token<'source> {
+pub(crate) struct Lexeme<'source> {
     pub kind: SyntaxKind,
     pub text: &'source str,
     pub span: Range<usize>,
@@ -120,20 +123,16 @@ pub(crate) struct Token<'source> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lexer, SyntaxKind, Token};
+    use super::{Lexeme, Lexer, SyntaxKind};
     use crate::styles::{Color, Decoration};
 
     fn check(input: &str, kind: SyntaxKind) {
         let mut lexer = Lexer::new(input);
 
-        let token = lexer.next().unwrap().unwrap();
+        let token = lexer.next().unwrap();
         assert_eq!(token.kind, kind);
         assert_eq!(token.text, input);
         assert_ne!(token.span.len(), 0);
-    }
-
-    fn check_many(input: &str) -> Vec<Token<'_>> {
-        Lexer::new(input).map(|token| token.unwrap()).collect()
     }
 
     #[test]
@@ -447,33 +446,33 @@ mod tests {
 
     #[test]
     fn foreground_style_specifier() {
-        let tokens = check_many("fg:blue");
+        let tokens = Lexer::new("fg:blue").collect::<Vec<_>>();
         insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn background_style_specifier() {
-        let tokens = check_many("bg:magenta");
+        let tokens = Lexer::new("bg:magenta").collect::<Vec<_>>();
         insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn single_decoration_style_specifier() {
-        let tokens = check_many("deco:bold");
+        let tokens = Lexer::new("deco:bold").collect::<Vec<_>>();
         insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn multiple_decoration_style_specifiers() {
-        let tokens = check_many("deco:bold,italic");
+        let tokens = Lexer::new("deco:bold,italic").collect::<Vec<_>>();
         insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn many_tokens() {
-        let tokens = check_many(
+        let tokens = Lexer::new(
             "leading [fg:red](styled one) \\[middle\\) [bg:blue;deco:bold,italic](styled two) \\\n trailing",
-        );
+        ).collect::<Vec<_>>();
         insta::assert_debug_snapshot!(tokens);
     }
 }
