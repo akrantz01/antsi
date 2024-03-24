@@ -14,9 +14,7 @@ expression: tokens
         span: 4..5,
     },
     Lexeme {
-        kind: Decoration(
-            Bold,
-        ),
+        kind: Decoration,
         text: "bold",
         span: 5..9,
     },
@@ -26,9 +24,7 @@ expression: tokens
         span: 9..10,
     },
     Lexeme {
-        kind: Decoration(
-            Italic,
-        ),
+        kind: Decoration,
         text: "italic",
         span: 10..16,
     },

@@ -14,9 +14,7 @@ expression: tokens
         span: 2..3,
     },
     Lexeme {
-        kind: Color(
-            Blue,
-        ),
+        kind: Color,
         text: "blue",
         span: 3..7,
     },

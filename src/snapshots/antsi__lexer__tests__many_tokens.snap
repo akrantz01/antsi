@@ -24,9 +24,7 @@ expression: tokens
         span: 11..12,
     },
     Lexeme {
-        kind: Color(
-            Red,
-        ),
+        kind: Color,
         text: "red",
         span: 12..15,
     },
@@ -56,9 +54,7 @@ expression: tokens
         span: 28..29,
     },
     Lexeme {
-        kind: EscapeCharacter(
-            '[',
-        ),
+        kind: EscapeCharacter,
         text: "\\[",
         span: 29..31,
     },
@@ -68,9 +64,7 @@ expression: tokens
         span: 31..37,
     },
     Lexeme {
-        kind: EscapeCharacter(
-            ')',
-        ),
+        kind: EscapeCharacter,
         text: "\\)",
         span: 37..39,
     },
@@ -95,9 +89,7 @@ expression: tokens
         span: 43..44,
     },
     Lexeme {
-        kind: Color(
-            Blue,
-        ),
+        kind: Color,
         text: "blue",
         span: 44..48,
     },
@@ -117,9 +109,7 @@ expression: tokens
         span: 53..54,
     },
     Lexeme {
-        kind: Decoration(
-            Bold,
-        ),
+        kind: Decoration,
         text: "bold",
         span: 54..58,
     },
@@ -129,9 +119,7 @@ expression: tokens
         span: 58..59,
     },
     Lexeme {
-        kind: Decoration(
-            Italic,
-        ),
+        kind: Decoration,
         text: "italic",
         span: 59..65,
     },

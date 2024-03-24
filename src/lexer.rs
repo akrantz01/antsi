@@ -1,9 +1,7 @@
-use crate::ast::{Color, Decoration};
 use logos::Logos;
 use std::{
     fmt::{Display, Formatter},
     ops::Range,
-    str::FromStr,
 };
 
 pub(crate) struct Lexer<'source>(logos::Lexer<'source, SyntaxKind>);
@@ -62,23 +60,21 @@ pub(crate) enum SyntaxKind {
 
     #[regex(
         r#"(bright-)?(black|red|green|yellow|blue|magenta|cyan|white)"#,
-        |lex| Color::from_str(lex.slice()).expect("valid color"),
         priority = 10,
         ignore(ascii_case)
     )]
-    #[token("default", |_| Color::Default, ignore(ascii_case))]
-    Color(Color),
+    #[token("default", ignore(ascii_case))]
+    Color,
 
     #[regex(
         r#"(bold|dim|faint|italic|underline|(fast|slow)-blink|invert|reverse|hide|conceal|strike(-)?through)"#,
-        |lex| Decoration::from_str(lex.slice()).expect("valid decoration"),
         priority = 10,
         ignore(ascii_case)
     )]
-    Decoration(Decoration),
+    Decoration,
 
-    #[regex(r#"\\[\\\[\]()]"#, |lex| lex.slice().chars().nth(1).unwrap())]
-    EscapeCharacter(char),
+    #[regex(r#"\\[\\\[\]()]"#)]
+    EscapeCharacter,
 
     #[regex(r#"\\[ \r\n\t]+"#)]
     EscapeWhitespace,
@@ -104,9 +100,9 @@ impl Display for SyntaxKind {
             Self::ForegroundSpecifier => "foreground specifier",
             Self::BackgroundSpecifier => "background specifier",
             Self::DecorationSpecifier => "decoration specifier",
-            Self::Color(_) => "color",
-            Self::Decoration(_) => "decoration",
-            Self::EscapeCharacter(_) => "escape character",
+            Self::Color => "color",
+            Self::Decoration => "decoration",
+            Self::EscapeCharacter => "escape character",
             Self::EscapeWhitespace => "escape whitespace",
             Self::Text => "text",
             Self::Unknown => "unknown",
@@ -220,183 +216,177 @@ mod tests {
 
     #[test]
     fn color_black() {
-        check("black", SyntaxKind::Color(Color::Black));
+        check("black", SyntaxKind::Color);
     }
 
     #[test]
     fn color_red() {
-        check("red", SyntaxKind::Color(Color::Red));
+        check("red", SyntaxKind::Color);
     }
 
     #[test]
     fn color_green() {
-        check("green", SyntaxKind::Color(Color::Green));
+        check("green", SyntaxKind::Color);
     }
 
     #[test]
     fn color_yellow() {
-        check("yellow", SyntaxKind::Color(Color::Yellow));
+        check("yellow", SyntaxKind::Color);
     }
 
     #[test]
     fn color_blue() {
-        check("blue", SyntaxKind::Color(Color::Blue));
+        check("blue", SyntaxKind::Color);
     }
 
     #[test]
     fn color_magenta() {
-        check("magenta", SyntaxKind::Color(Color::Magenta));
+        check("magenta", SyntaxKind::Color);
     }
 
     #[test]
     fn color_cyan() {
-        check("cyan", SyntaxKind::Color(Color::Cyan));
+        check("cyan", SyntaxKind::Color);
     }
 
     #[test]
     fn color_white() {
-        check("white", SyntaxKind::Color(Color::White));
+        check("white", SyntaxKind::Color);
     }
 
     #[test]
     fn color_default() {
-        check("default", SyntaxKind::Color(Color::Default));
+        check("default", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_black() {
-        check("bright-black", SyntaxKind::Color(Color::BrightBlack));
+        check("bright-black", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_red() {
-        check("bright-red", SyntaxKind::Color(Color::BrightRed));
+        check("bright-red", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_green() {
-        check("bright-green", SyntaxKind::Color(Color::BrightGreen));
+        check("bright-green", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_yellow() {
-        check("bright-yellow", SyntaxKind::Color(Color::BrightYellow));
+        check("bright-yellow", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_blue() {
-        check("bright-blue", SyntaxKind::Color(Color::BrightBlue));
+        check("bright-blue", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_magenta() {
-        check("bright-magenta", SyntaxKind::Color(Color::BrightMagenta));
+        check("bright-magenta", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_cyan() {
-        check("bright-cyan", SyntaxKind::Color(Color::BrightCyan));
+        check("bright-cyan", SyntaxKind::Color);
     }
 
     #[test]
     fn color_bright_white() {
-        check("bright-white", SyntaxKind::Color(Color::BrightWhite));
+        check("bright-white", SyntaxKind::Color);
     }
 
     #[test]
     fn decoration_bold() {
-        check("bold", SyntaxKind::Decoration(Decoration::Bold));
+        check("bold", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_dim() {
-        check("dim", SyntaxKind::Decoration(Decoration::Dim));
+        check("dim", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_faint() {
-        check("faint", SyntaxKind::Decoration(Decoration::Dim));
+        check("faint", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_italic() {
-        check("italic", SyntaxKind::Decoration(Decoration::Italic));
+        check("italic", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_underline() {
-        check("underline", SyntaxKind::Decoration(Decoration::Underline));
+        check("underline", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_fast_blink() {
-        check("fast-blink", SyntaxKind::Decoration(Decoration::FastBlink));
+        check("fast-blink", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_slow_blink() {
-        check("slow-blink", SyntaxKind::Decoration(Decoration::SlowBlink));
+        check("slow-blink", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_invert() {
-        check("invert", SyntaxKind::Decoration(Decoration::Invert));
+        check("invert", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_reverse() {
-        check("reverse", SyntaxKind::Decoration(Decoration::Invert));
+        check("reverse", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_hide() {
-        check("hide", SyntaxKind::Decoration(Decoration::Hide));
+        check("hide", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_conceal() {
-        check("conceal", SyntaxKind::Decoration(Decoration::Hide));
+        check("conceal", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_strikethrough() {
-        check(
-            "strikethrough",
-            SyntaxKind::Decoration(Decoration::StrikeThrough),
-        );
+        check("strikethrough", SyntaxKind::Decoration);
     }
 
     #[test]
     fn decoration_strike_through() {
-        check(
-            "strike-through",
-            SyntaxKind::Decoration(Decoration::StrikeThrough),
-        );
+        check("strike-through", SyntaxKind::Decoration);
     }
 
     #[test]
     fn escape_character_backslash() {
-        check("\\\\", SyntaxKind::EscapeCharacter('\\'));
+        check("\\\\", SyntaxKind::EscapeCharacter);
     }
 
     #[test]
     fn escape_character_open_square_bracket() {
-        check("\\[", SyntaxKind::EscapeCharacter('['));
+        check("\\[", SyntaxKind::EscapeCharacter);
     }
 
     #[test]
     fn escape_character_close_square_bracket() {
-        check("\\]", SyntaxKind::EscapeCharacter(']'));
+        check("\\]", SyntaxKind::EscapeCharacter);
     }
 
     #[test]
     fn escape_character_open_parenthesis() {
-        check("\\(", SyntaxKind::EscapeCharacter('('));
+        check("\\(", SyntaxKind::EscapeCharacter);
     }
 
     #[test]
     fn escape_character_close_parenthesis() {
-        check("\\)", SyntaxKind::EscapeCharacter(')'));
+        check("\\)", SyntaxKind::EscapeCharacter);
     }
 
     #[test]
