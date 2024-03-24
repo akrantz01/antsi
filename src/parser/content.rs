@@ -1,36 +1,11 @@
-use super::Parser;
+use super::{text::text, Parser};
 use crate::{ast::Tokens, lexer::SyntaxKind};
 
 /// Parse a piece of styled content
 pub(crate) fn content(p: &mut Parser) -> Option<Tokens> {
     p.expect(SyntaxKind::ParenthesisOpen)?;
 
-    let mut tokens = Tokens::default();
-
-    loop {
-        match p.peek() {
-            Some(
-                SyntaxKind::ParenthesisClose
-                | SyntaxKind::ParenthesisOpen
-                | SyntaxKind::SquareBracketClose,
-            ) => break,
-            Some(SyntaxKind::SquareBracketOpen) => todo!("handle nested"),
-            Some(SyntaxKind::EscapeWhitespace) => {
-                p.bump();
-            }
-            Some(SyntaxKind::EscapeCharacter) => {
-                let lexeme = p.bump();
-
-                assert_eq!(lexeme.text.len(), 2);
-                tokens.push_char(lexeme.text.chars().nth(1).unwrap());
-            }
-            Some(_) => {
-                let lexeme = p.bump();
-                tokens.push_str(lexeme.text);
-            }
-            None => todo!("handle EOF"),
-        }
-    }
+    let tokens = text(p);
 
     p.expect(SyntaxKind::ParenthesisClose)?;
 

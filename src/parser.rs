@@ -6,6 +6,7 @@ use std::iter::Peekable;
 
 mod content;
 mod style;
+mod text;
 
 /// Convert a piece of text, potentially containing styled markup, to a sequence of tokens
 pub struct Parser<'source> {
