@@ -67,7 +67,7 @@ pub(crate) enum SyntaxKind {
     Color,
 
     #[regex(
-        r#"(bold|dim|faint|italic|underline|(fast|slow)-blink|invert|reverse|hide|conceal|strike(-)?through)"#,
+        r#"(bold|dim|faint|italic|underline|(fast|slow)-blink|blink-(fast|slow)|invert|reverse|hide|conceal|strike(-)?through)"#,
         priority = 10,
         ignore(ascii_case)
     )]
@@ -332,6 +332,16 @@ mod tests {
     #[test]
     fn decoration_slow_blink() {
         check("slow-blink", SyntaxKind::Decoration);
+    }
+
+    #[test]
+    fn decoration_blink_fast() {
+        check("blink-fast", SyntaxKind::Decoration);
+    }
+
+    #[test]
+    fn decoration_blink_slow() {
+        check("blink-slow", SyntaxKind::Decoration);
     }
 
     #[test]
