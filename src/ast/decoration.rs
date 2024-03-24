@@ -45,7 +45,7 @@ macro_rules! decorations {
             type Err = InvalidDecorationError;
 
             fn from_str(name: &str) -> Result<Self, Self::Err> {
-                Ok(match name {
+                Ok(match name.to_ascii_lowercase().as_str() {
                     $( $names => Decoration::$decoration, )*
                     _ => return Err(InvalidDecorationError),
                 })

@@ -45,7 +45,7 @@ macro_rules! colors {
             type Err = InvalidColorError;
 
             fn from_str(name: &str) -> Result<Self, Self::Err> {
-                Ok(match name {
+                Ok(match name.to_ascii_lowercase().as_str() {
                     $( $names => Color::$color, )*
                     _ => return Err(InvalidColorError),
                 })
