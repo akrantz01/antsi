@@ -120,7 +120,7 @@ pub(crate) struct Token<'source> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lexer, SyntaxKind};
+    use super::{Lexer, SyntaxKind, Token};
     use crate::styles::{Color, Decoration};
 
     fn check(input: &str, kind: SyntaxKind) {
@@ -132,14 +132,8 @@ mod tests {
         assert_ne!(token.span.len(), 0);
     }
 
-    fn check_many(input: &str, tokens: Vec<(SyntaxKind, &str)>) {
-        let actual = Lexer::new(input)
-            .map(|token| {
-                let token = token.unwrap();
-                (token.kind, token.text)
-            })
-            .collect::<Vec<_>>();
-        assert_eq!(actual, tokens);
+    fn check_many(input: &str) -> Vec<Token<'_>> {
+        Lexer::new(input).map(|token| token.unwrap()).collect()
     }
 
     #[test]
@@ -453,91 +447,33 @@ mod tests {
 
     #[test]
     fn foreground_style_specifier() {
-        check_many(
-            "fg:blue",
-            vec![
-                (SyntaxKind::ForegroundSpecifier, "fg"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Color(Color::Blue), "blue"),
-            ],
-        );
+        let tokens = check_many("fg:blue");
+        insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn background_style_specifier() {
-        check_many(
-            "bg:magenta",
-            vec![
-                (SyntaxKind::BackgroundSpecifier, "bg"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Color(Color::Magenta), "magenta"),
-            ],
-        );
+        let tokens = check_many("bg:magenta");
+        insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn single_decoration_style_specifier() {
-        check_many(
-            "deco:bold",
-            vec![
-                (SyntaxKind::DecorationSpecifier, "deco"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Decoration(Decoration::Bold), "bold"),
-            ],
-        );
+        let tokens = check_many("deco:bold");
+        insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn multiple_decoration_style_specifiers() {
-        check_many(
-            "deco:bold,italic",
-            vec![
-                (SyntaxKind::DecorationSpecifier, "deco"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Decoration(Decoration::Bold), "bold"),
-                (SyntaxKind::Comma, ","),
-                (SyntaxKind::Decoration(Decoration::Italic), "italic"),
-            ],
-        );
+        let tokens = check_many("deco:bold,italic");
+        insta::assert_debug_snapshot!(tokens);
     }
 
     #[test]
     fn many_tokens() {
-        check_many(
+        let tokens = check_many(
             "leading [fg:red](styled one) \\[middle\\) [bg:blue;deco:bold,italic](styled two) \\\n trailing",
-            vec![
-                (SyntaxKind::Text, "leading "),
-                (SyntaxKind::SquareBracketOpen, "["),
-                (SyntaxKind::ForegroundSpecifier, "fg"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Color(Color::Red), "red"),
-                (SyntaxKind::SquareBracketClose, "]"),
-                (SyntaxKind::ParenthesisOpen, "("),
-                (SyntaxKind::Text, "styled one"),
-                (SyntaxKind::ParenthesisClose, ")"),
-                (SyntaxKind::Text, " "),
-                (SyntaxKind::EscapeCharacter('['), "\\["),
-                (SyntaxKind::Text, "middle"),
-                (SyntaxKind::EscapeCharacter(')'), "\\)"),
-                (SyntaxKind::Text, " "),
-                (SyntaxKind::SquareBracketOpen, "["),
-                (SyntaxKind::BackgroundSpecifier, "bg"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Color(Color::Blue), "blue"),
-                (SyntaxKind::Semicolon, ";"),
-                (SyntaxKind::DecorationSpecifier, "deco"),
-                (SyntaxKind::Colon, ":"),
-                (SyntaxKind::Decoration(Decoration::Bold), "bold"),
-                (SyntaxKind::Comma, ","),
-                (SyntaxKind::Decoration(Decoration::Italic), "italic"),
-                (SyntaxKind::SquareBracketClose, "]"),
-                (SyntaxKind::ParenthesisOpen, "("),
-                (SyntaxKind::Text, "styled two"),
-                (SyntaxKind::ParenthesisClose, ")"),
-                (SyntaxKind::Text, " "),
-                (SyntaxKind::EscapeWhitespace, "\\\n "),
-                (SyntaxKind::Text, "trailing"),
-            ],
-        )
+        );
+        insta::assert_debug_snapshot!(tokens);
     }
 }

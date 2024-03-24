@@ -1,0 +1,23 @@
+---
+source: src/lexer.rs
+expression: tokens
+---
+[
+    Token {
+        kind: DecorationSpecifier,
+        text: "deco",
+        span: 0..4,
+    },
+    Token {
+        kind: Colon,
+        text: ":",
+        span: 4..5,
+    },
+    Token {
+        kind: Decoration(
+            Bold,
+        ),
+        text: "bold",
+        span: 5..9,
+    },
+]

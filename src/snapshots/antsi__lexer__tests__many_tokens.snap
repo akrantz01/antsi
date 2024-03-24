@@ -1,0 +1,173 @@
+---
+source: src/lexer.rs
+expression: tokens
+---
+[
+    Token {
+        kind: Text,
+        text: "leading ",
+        span: 0..8,
+    },
+    Token {
+        kind: SquareBracketOpen,
+        text: "[",
+        span: 8..9,
+    },
+    Token {
+        kind: ForegroundSpecifier,
+        text: "fg",
+        span: 9..11,
+    },
+    Token {
+        kind: Colon,
+        text: ":",
+        span: 11..12,
+    },
+    Token {
+        kind: Color(
+            Red,
+        ),
+        text: "red",
+        span: 12..15,
+    },
+    Token {
+        kind: SquareBracketClose,
+        text: "]",
+        span: 15..16,
+    },
+    Token {
+        kind: ParenthesisOpen,
+        text: "(",
+        span: 16..17,
+    },
+    Token {
+        kind: Text,
+        text: "styled one",
+        span: 17..27,
+    },
+    Token {
+        kind: ParenthesisClose,
+        text: ")",
+        span: 27..28,
+    },
+    Token {
+        kind: Text,
+        text: " ",
+        span: 28..29,
+    },
+    Token {
+        kind: EscapeCharacter(
+            '[',
+        ),
+        text: "\\[",
+        span: 29..31,
+    },
+    Token {
+        kind: Text,
+        text: "middle",
+        span: 31..37,
+    },
+    Token {
+        kind: EscapeCharacter(
+            ')',
+        ),
+        text: "\\)",
+        span: 37..39,
+    },
+    Token {
+        kind: Text,
+        text: " ",
+        span: 39..40,
+    },
+    Token {
+        kind: SquareBracketOpen,
+        text: "[",
+        span: 40..41,
+    },
+    Token {
+        kind: BackgroundSpecifier,
+        text: "bg",
+        span: 41..43,
+    },
+    Token {
+        kind: Colon,
+        text: ":",
+        span: 43..44,
+    },
+    Token {
+        kind: Color(
+            Blue,
+        ),
+        text: "blue",
+        span: 44..48,
+    },
+    Token {
+        kind: Semicolon,
+        text: ";",
+        span: 48..49,
+    },
+    Token {
+        kind: DecorationSpecifier,
+        text: "deco",
+        span: 49..53,
+    },
+    Token {
+        kind: Colon,
+        text: ":",
+        span: 53..54,
+    },
+    Token {
+        kind: Decoration(
+            Bold,
+        ),
+        text: "bold",
+        span: 54..58,
+    },
+    Token {
+        kind: Comma,
+        text: ",",
+        span: 58..59,
+    },
+    Token {
+        kind: Decoration(
+            Italic,
+        ),
+        text: "italic",
+        span: 59..65,
+    },
+    Token {
+        kind: SquareBracketClose,
+        text: "]",
+        span: 65..66,
+    },
+    Token {
+        kind: ParenthesisOpen,
+        text: "(",
+        span: 66..67,
+    },
+    Token {
+        kind: Text,
+        text: "styled two",
+        span: 67..77,
+    },
+    Token {
+        kind: ParenthesisClose,
+        text: ")",
+        span: 77..78,
+    },
+    Token {
+        kind: Text,
+        text: " ",
+        span: 78..79,
+    },
+    Token {
+        kind: EscapeWhitespace,
+        text: "\\\n ",
+        span: 79..82,
+    },
+    Token {
+        kind: Text,
+        text: "trailing",
+        span: 82..90,
+    },
+]
