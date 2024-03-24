@@ -1,8 +1,8 @@
-use super::Parser;
+use super::{markup::markup, Parser};
 use crate::{ast::Tokens, lexer::SyntaxKind};
 
 /// Parse a piece of text that may content styled markup
-pub(crate) fn text(p: &mut Parser) -> Tokens {
+pub(crate) fn text(p: &mut Parser) -> Option<Tokens> {
     let mut tokens = Tokens::default();
 
     loop {
@@ -12,7 +12,10 @@ pub(crate) fn text(p: &mut Parser) -> Tokens {
                 | SyntaxKind::ParenthesisOpen
                 | SyntaxKind::SquareBracketClose,
             ) => break,
-            Some(SyntaxKind::SquareBracketOpen) => todo!("handle nested"),
+            Some(SyntaxKind::SquareBracketOpen) => {
+                let styled = markup(p)?;
+                tokens.push(styled);
+            }
             Some(SyntaxKind::EscapeWhitespace) => {
                 p.bump();
             }
@@ -30,7 +33,7 @@ pub(crate) fn text(p: &mut Parser) -> Tokens {
         }
     }
 
-    tokens
+    Some(tokens)
 }
 
 #[cfg(test)]
@@ -42,241 +45,325 @@ mod tests {
     };
 
     #[test]
-    fn text_empty() {
+    fn empty() {
         let mut parser = Parser::new("");
-        assert_eq!(text(&mut parser), Tokens::from(vec![]));
+        assert_eq!(text(&mut parser), Some(Tokens::from(vec![])));
     }
 
     #[test]
-    fn text_stops_consuming_at_open_parenthesis() {
+    fn stops_consuming_at_open_parenthesis() {
         let mut parser = Parser::new("before(after");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("before"))])
+            Some(Tokens::from(vec![Token::Content(String::from("before"))]))
         );
         assert!(parser.at(SyntaxKind::ParenthesisOpen));
     }
 
     #[test]
-    fn text_stops_consuming_at_close_parenthesis() {
+    fn stops_consuming_at_close_parenthesis() {
         let mut parser = Parser::new("before)after");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("before"))])
+            Some(Tokens::from(vec![Token::Content(String::from("before"))]))
         );
         assert!(parser.at(SyntaxKind::ParenthesisClose));
     }
 
     #[test]
-    fn text_stops_consuming_at_close_square_bracket() {
+    fn stops_consuming_at_close_square_bracket() {
         let mut parser = Parser::new("before]after");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("before"))])
+            Some(Tokens::from(vec![Token::Content(String::from("before"))]))
         );
         assert!(parser.at(SyntaxKind::SquareBracketClose));
     }
 
     #[test]
-    fn text_lowercase_alphabetic() {
+    fn lowercase_alphabetic() {
         let mut parser = Parser::new("abcdefghijklmnopqrstuvwxyz");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(
+            Some(Tokens::from(vec![Token::Content(String::from(
                 "abcdefghijklmnopqrstuvwxyz"
-            ))])
+            ))]))
         )
     }
 
     #[test]
-    fn text_uppercase_alphabetic() {
+    fn uppercase_alphabetic() {
         let mut parser = Parser::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(
+            Some(Tokens::from(vec![Token::Content(String::from(
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            ))])
+            ))]))
         )
     }
 
     #[test]
-    fn text_mixed_case_alphabetic() {
+    fn mixed_case_alphabetic() {
         let mut parser = Parser::new("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYuZz");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(
+            Some(Tokens::from(vec![Token::Content(String::from(
                 "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYuZz"
-            ))])
+            ))]))
         )
     }
 
     #[test]
-    fn text_special_characters() {
+    fn special_characters() {
         let mut parser = Parser::new("~!@#$%^&*-=_+~");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("~!@#$%^&*-=_+~"))])
+            Some(Tokens::from(vec![Token::Content(String::from(
+                "~!@#$%^&*-=_+~"
+            ))]))
         )
     }
 
     #[test]
-    fn text_whitespace() {
+    fn whitespace() {
         let mut parser = Parser::new(" \n\t\r");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(" \n\t\r"))])
+            Some(Tokens::from(vec![Token::Content(String::from(" \n\t\r"))]))
         )
     }
 
     #[test]
-    fn text_matching_color() {
+    fn matching_color() {
         let mut parser = Parser::new("black");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("black"))])
+            Some(Tokens::from(vec![Token::Content(String::from("black"))]))
         );
     }
 
     #[test]
-    fn text_matching_bright_color() {
+    fn matching_bright_color() {
         let mut parser = Parser::new("bright-blue");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("bright-blue"))])
+            Some(Tokens::from(vec![Token::Content(String::from(
+                "bright-blue"
+            ))]))
         );
     }
 
     #[test]
-    fn text_matching_default_color() {
+    fn matching_default_color() {
         let mut parser = Parser::new("default");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("default"))])
+            Some(Tokens::from(vec![Token::Content(String::from("default"))]))
         );
     }
 
     #[test]
-    fn text_matching_decoration() {
+    fn matching_decoration() {
         let mut parser = Parser::new("fast-blink");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("fast-blink"))])
+            Some(Tokens::from(vec![Token::Content(String::from(
+                "fast-blink"
+            ))]))
         )
     }
 
     #[test]
-    fn text_containing_colon() {
+    fn containing_colon() {
         let mut parser = Parser::new(":");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(":"))])
+            Some(Tokens::from(vec![Token::Content(String::from(":"))]))
         )
     }
 
     #[test]
-    fn text_containing_semicolon() {
+    fn containing_semicolon() {
         let mut parser = Parser::new(";");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(";"))])
+            Some(Tokens::from(vec![Token::Content(String::from(";"))]))
         )
     }
 
     #[test]
-    fn text_containing_comma() {
+    fn containing_comma() {
         let mut parser = Parser::new(",");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(","))])
+            Some(Tokens::from(vec![Token::Content(String::from(","))]))
         )
     }
 
     #[test]
-    fn text_containing_foreground_specifier() {
+    fn containing_foreground_specifier() {
         let mut parser = Parser::new("fg");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("fg"))])
+            Some(Tokens::from(vec![Token::Content(String::from("fg"))]))
         );
     }
 
     #[test]
-    fn text_containing_background_specifier() {
+    fn containing_background_specifier() {
         let mut parser = Parser::new("bg");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("bg"))])
+            Some(Tokens::from(vec![Token::Content(String::from("bg"))]))
         );
     }
 
     #[test]
-    fn text_containing_decoration_specifier() {
+    fn containing_decoration_specifier() {
         let mut parser = Parser::new("deco");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("deco"))])
+            Some(Tokens::from(vec![Token::Content(String::from("deco"))]))
         );
     }
 
     #[test]
-    fn text_escaped_backslash() {
+    fn escaped_backslash() {
         let mut parser = Parser::new("\\\\");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("\\"))])
+            Some(Tokens::from(vec![Token::Content(String::from("\\"))]))
         )
     }
 
     #[test]
-    fn text_escaped_open_square_bracket() {
+    fn escaped_open_square_bracket() {
         let mut parser = Parser::new("\\[");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("["))])
+            Some(Tokens::from(vec![Token::Content(String::from("["))]))
         )
     }
 
     #[test]
-    fn text_escaped_close_square_bracket() {
+    fn escaped_close_square_bracket() {
         let mut parser = Parser::new("\\]");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("]"))])
+            Some(Tokens::from(vec![Token::Content(String::from("]"))]))
         )
     }
 
     #[test]
-    fn text_escaped_open_parenthesis() {
+    fn escaped_open_parenthesis() {
         let mut parser = Parser::new("\\(");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from("("))])
+            Some(Tokens::from(vec![Token::Content(String::from("("))]))
         )
     }
 
     #[test]
-    fn text_escaped_close_parenthesis() {
+    fn escaped_close_parenthesis() {
         let mut parser = Parser::new("\\)");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(")"))])
+            Some(Tokens::from(vec![Token::Content(String::from(")"))]))
         )
     }
 
     #[test]
-    fn text_escaped_whitespace() {
+    fn escaped_whitespace() {
         let mut parser = Parser::new("\\ \n\t\r");
-        assert_eq!(text(&mut parser), Tokens::from(vec![]));
+        assert_eq!(text(&mut parser), Some(Tokens::from(vec![])));
     }
 
     #[test]
-    fn text_multiple_distinct_tokens() {
+    fn multiple_distinct_tokens() {
         let mut parser = Parser::new("some plaintext \\(ascii\\] \\\n\n :+1:");
         assert_eq!(
             text(&mut parser),
-            Tokens::from(vec![Token::Content(String::from(
+            Some(Tokens::from(vec![Token::Content(String::from(
                 "some plaintext (ascii] :+1:"
-            ))])
+            ))]))
         );
+    }
+
+    #[test]
+    fn mixed_characters_and_escape_characters() {
+        let mut parser = Parser::new("abc\\(DEF\\)12\\   34\\[!@#$\\]");
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![Token::Content(String::from(
+                "abc(DEF)1234[!@#$]"
+            ))]))
+        );
+    }
+
+    #[test]
+    fn empty_token() {
+        let mut parser = Parser::new("[fg:red]()");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_foreground() {
+        let mut parser = Parser::new("[fg:red](inner)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_background() {
+        let mut parser = Parser::new("[bg:blue](inner)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_single_decoration() {
+        let mut parser = Parser::new("[deco:dim](inner)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_multiple_decorations() {
+        let mut parser = Parser::new("[deco:dim,italic](inner)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_multiple_styles() {
+        let mut parser = Parser::new("[deco:dim,italic;fg:red;bg:blue](inner)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_leading_content() {
+        let mut parser = Parser::new("leading [fg:red](content)");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_trailing_content() {
+        let mut parser = Parser::new("[fg:red](content) trailing");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn token_with_leading_and_trailing_content() {
+        let mut parser = Parser::new("leading [fg:red](content) trailing");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn nested_token() {
+        let mut parser = Parser::new("[fg:red]([bg:blue](inner))");
+        insta::assert_debug_snapshot!(text(&mut parser));
+    }
+
+    #[test]
+    fn kitchen_sink() {
+        let mut parser =
+            Parser::new("leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing");
+        insta::assert_debug_snapshot!(text(&mut parser));
     }
 }

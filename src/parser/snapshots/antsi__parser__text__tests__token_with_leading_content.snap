@@ -1,0 +1,27 @@
+---
+source: src/parser/text.rs
+expression: text(&mut parser)
+---
+Some(
+    Tokens(
+        [
+            Content(
+                "leading ",
+            ),
+            Styled {
+                content: [
+                    Content(
+                        "content",
+                    ),
+                ],
+                style: Style {
+                    foreground: Some(
+                        Red,
+                    ),
+                    background: None,
+                    decoration: None,
+                },
+            },
+        ],
+    ),
+)

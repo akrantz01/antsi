@@ -5,7 +5,7 @@ use crate::{ast::Tokens, lexer::SyntaxKind};
 pub(crate) fn content(p: &mut Parser) -> Option<Tokens> {
     p.expect(SyntaxKind::ParenthesisOpen)?;
 
-    let tokens = text(p);
+    let tokens = text(p)?;
 
     p.expect(SyntaxKind::ParenthesisClose)?;
 
@@ -18,13 +18,13 @@ mod tests {
     use crate::ast::{Token, Tokens};
 
     #[test]
-    fn content_empty() {
+    fn empty() {
         let mut parser = Parser::new("()");
         assert_eq!(content(&mut parser), Some(Tokens::from(vec![])));
     }
 
     #[test]
-    fn content_lowercase_alphabetic() {
+    fn lowercase_alphabetic() {
         let mut parser = Parser::new("(abcdefghijklmnopqrstuvwxyz)");
         assert_eq!(
             content(&mut parser),
@@ -35,7 +35,7 @@ mod tests {
     }
 
     #[test]
-    fn content_uppercase_alphabetic() {
+    fn uppercase_alphabetic() {
         let mut parser = Parser::new("(ABCDEFGHIJKLMNOPQRSTUVWXYZ)");
         assert_eq!(
             content(&mut parser),
@@ -46,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn content_mixed_case_alphabetic() {
+    fn mixed_case_alphabetic() {
         let mut parser = Parser::new("(AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYuZz)");
         assert_eq!(
             content(&mut parser),
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn content_special_characters() {
+    fn special_characters() {
         let mut parser = Parser::new("(~!@#$%^&*-=_+~)");
         assert_eq!(
             content(&mut parser),
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn content_whitespace() {
+    fn whitespace() {
         let mut parser = Parser::new("( \n\t\r)");
         assert_eq!(
             content(&mut parser),
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn content_matching_color() {
+    fn matching_color() {
         let mut parser = Parser::new("(black)");
         assert_eq!(
             content(&mut parser),
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn content_matching_bright_color() {
+    fn matching_bright_color() {
         let mut parser = Parser::new("(bright-blue)");
         assert_eq!(
             content(&mut parser),
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn content_matching_default_color() {
+    fn matching_default_color() {
         let mut parser = Parser::new("(default)");
         assert_eq!(
             content(&mut parser),
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn content_matching_decoration() {
+    fn matching_decoration() {
         let mut parser = Parser::new("(fast-blink)");
         assert_eq!(
             content(&mut parser),
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_colon() {
+    fn containing_colon() {
         let mut parser = Parser::new("(:)");
         assert_eq!(
             content(&mut parser),
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_semicolon() {
+    fn containing_semicolon() {
         let mut parser = Parser::new("(;)");
         assert_eq!(
             content(&mut parser),
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_comma() {
+    fn containing_comma() {
         let mut parser = Parser::new("(,)");
         assert_eq!(
             content(&mut parser),
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_foreground_specifier() {
+    fn containing_foreground_specifier() {
         let mut parser = Parser::new("(fg)");
         assert_eq!(
             content(&mut parser),
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_background_specifier() {
+    fn containing_background_specifier() {
         let mut parser = Parser::new("(bg)");
         assert_eq!(
             content(&mut parser),
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn content_containing_decoration_specifier() {
+    fn containing_decoration_specifier() {
         let mut parser = Parser::new("(deco)");
         assert_eq!(
             content(&mut parser),
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_backslash() {
+    fn escaped_backslash() {
         let mut parser = Parser::new("(\\\\)");
         assert_eq!(
             content(&mut parser),
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_open_square_bracket() {
+    fn escaped_open_square_bracket() {
         let mut parser = Parser::new("(\\[)");
         assert_eq!(
             content(&mut parser),
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_close_square_bracket() {
+    fn escaped_close_square_bracket() {
         let mut parser = Parser::new("(\\])");
         assert_eq!(
             content(&mut parser),
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_open_parenthesis() {
+    fn escaped_open_parenthesis() {
         let mut parser = Parser::new("(\\()");
         assert_eq!(
             content(&mut parser),
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_close_parenthesis() {
+    fn escaped_close_parenthesis() {
         let mut parser = Parser::new("(\\))");
         assert_eq!(
             content(&mut parser),
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn content_escaped_whitespace() {
+    fn escaped_whitespace() {
         let mut parser = Parser::new("(\\ \n\t\r)");
         assert_eq!(content(&mut parser), Some(Tokens::from(vec![])));
     }

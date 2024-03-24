@@ -1,0 +1,26 @@
+---
+source: src/parser/text.rs
+expression: text(&mut parser)
+---
+Some(
+    Tokens(
+        [
+            Styled {
+                content: [
+                    Content(
+                        "inner",
+                    ),
+                ],
+                style: Style {
+                    foreground: None,
+                    background: None,
+                    decoration: Some(
+                        {
+                            Dim,
+                        },
+                    ),
+                },
+            },
+        ],
+    ),
+)
