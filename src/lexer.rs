@@ -1,4 +1,4 @@
-use crate::styles::{Color, Decoration};
+use crate::ast::{Color, Decoration};
 use logos::Logos;
 use std::{
     fmt::{Display, Formatter},
@@ -123,8 +123,8 @@ pub(crate) struct Lexeme<'source> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lexeme, Lexer, SyntaxKind};
-    use crate::styles::{Color, Decoration};
+    use super::{Lexer, SyntaxKind};
+    use crate::ast::{Color, Decoration};
 
     fn check(input: &str, kind: SyntaxKind) {
         let mut lexer = Lexer::new(input);

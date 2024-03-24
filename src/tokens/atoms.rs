@@ -1,4 +1,4 @@
-use crate::styles::{Color, Decoration};
+use crate::ast::{Color, Decoration};
 use nom::{
     branch::alt,
     bytes::complete::tag_no_case,
@@ -98,7 +98,7 @@ where
 #[cfg(test)]
 mod tests {
     mod color {
-        use crate::styles::Color;
+        use crate::ast::Color;
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(color -> Color);
@@ -145,7 +145,7 @@ mod tests {
     }
 
     mod decoration {
-        use crate::styles::Decoration;
+        use crate::ast::Decoration;
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(decoration -> Decoration);

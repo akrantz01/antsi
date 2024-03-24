@@ -11,25 +11,25 @@ macro_rules! set {
 /// Create a new style
 macro_rules! style {
     () => {
-        $crate::styles::Style::default()
+        $crate::ast::Style::default()
     };
     (@internal $style:expr; fg: $color:ident ; $( $rest:tt )* ) => {{
-        $style.foreground = Some($crate::styles::Color::$color);
+        $style.foreground = Some($crate::ast::Color::$color);
         style!(@internal $style; $( $rest ) *)
     }};
     (@internal $style:expr; bg: $color:ident ; $( $rest:tt )* ) => {{
-        $style.background = Some($crate::styles::Color::$color);
+        $style.background = Some($crate::ast::Color::$color);
         style!(@internal $style; $( $rest ) *)
     }};
     (@internal $style:expr; deco: $( $decoration:ident ),+ ; $( $rest:tt )* ) => {{
-        $style.decoration = Some(set!{ $( $crate::styles::Decoration::$decoration, )+ });
+        $style.decoration = Some(set!{ $( $crate::ast::Decoration::$decoration, )+ });
         style!(@internal $style; $( $rest ) *)
     }};
     (@internal $style:expr; ) => {
         $style
     };
     ( $( $rest:tt )* ) => {{
-        let mut style = $crate::styles::Style::default();
+        let mut style = $crate::ast::Style::default();
         style!(@internal style; $( $rest )*)
     }};
 }

@@ -2,8 +2,8 @@ use pyo3::prelude::*;
 
 #[macro_use]
 mod macros;
+mod ast;
 mod lexer;
-mod styles;
 mod tokens;
 
 /// Formats the sum of two numbers as string.

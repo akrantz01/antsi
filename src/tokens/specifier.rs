@@ -1,5 +1,5 @@
 use super::atoms::{color, decoration, whitespace};
-use crate::styles::{Color, Decoration, Style};
+use crate::ast::{Color, Decoration, Style};
 use indexmap::IndexSet;
 use nom::{
     branch::alt,
@@ -178,7 +178,7 @@ where
 mod test {
     mod foreground_specifier {
         use super::super::StyleSpecifier;
-        use crate::styles::Color;
+        use crate::ast::Color;
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(foreground_specifier -> StyleSpecifier);
@@ -219,7 +219,7 @@ mod test {
 
     mod background_specifier {
         use super::super::StyleSpecifier;
-        use crate::styles::Color;
+        use crate::ast::Color;
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(background_specifier -> StyleSpecifier);
@@ -260,7 +260,7 @@ mod test {
 
     mod decoration_specifier {
         use super::super::StyleSpecifier;
-        use crate::styles::Decoration;
+        use crate::ast::Decoration;
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(decoration_specifier -> StyleSpecifier);
@@ -314,7 +314,7 @@ mod test {
 
     mod style_specifier {
         use super::super::StyleSpecifier;
-        use crate::styles::{Color, Decoration};
+        use crate::ast::{Color, Decoration};
         use nom::{error::ErrorKind, error_position};
 
         make_error_concrete!(style_specifier -> StyleSpecifier);
