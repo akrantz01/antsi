@@ -1,0 +1,20 @@
+---
+source: src/parser/markup.rs
+expression: markup(&mut parser)
+---
+Some(
+    Styled {
+        content: [
+            Content(
+                "HELLO",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: None,
+            decoration: None,
+        },
+    },
+)

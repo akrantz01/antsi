@@ -5,6 +5,7 @@ use crate::{
 use std::iter::Peekable;
 
 mod content;
+mod markup;
 mod style;
 mod text;
 

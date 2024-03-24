@@ -1,0 +1,18 @@
+---
+source: src/parser/markup.rs
+expression: markup(&mut parser)
+---
+Some(
+    Styled {
+        content: [],
+        style: Style {
+            foreground: None,
+            background: None,
+            decoration: Some(
+                {
+                    Dim,
+                },
+            ),
+        },
+    },
+)

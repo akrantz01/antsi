@@ -1,0 +1,37 @@
+---
+source: src/parser/markup.rs
+expression: markup(&mut parser)
+---
+Some(
+    Styled {
+        content: [
+            Content(
+                "leading ",
+            ),
+            Styled {
+                content: [
+                    Content(
+                        "inner",
+                    ),
+                ],
+                style: Style {
+                    foreground: None,
+                    background: Some(
+                        Blue,
+                    ),
+                    decoration: None,
+                },
+            },
+            Content(
+                " trailing",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: None,
+            decoration: None,
+        },
+    },
+)
