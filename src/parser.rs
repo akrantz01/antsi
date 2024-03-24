@@ -4,6 +4,7 @@ use crate::{
 };
 use std::iter::Peekable;
 
+mod content;
 mod style;
 
 /// Convert a piece of text, potentially containing styled markup, to a sequence of tokens
