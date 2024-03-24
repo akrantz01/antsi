@@ -1,0 +1,9 @@
+---
+source: src/parser.rs
+expression: result
+---
+[
+    Content(
+        "this some text with wh ite\nspa\tce and numb3r5 and $ymb@l$ and CAPITALS",
+    ),
+]
