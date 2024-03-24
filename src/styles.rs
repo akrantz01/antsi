@@ -1,8 +1,24 @@
 use indexmap::IndexSet;
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
+
+/// The provided [`Color`] name was invalid
+#[derive(Clone, Copy, Debug)]
+pub struct InvalidColorError;
+
+impl std::error::Error for InvalidColorError {}
+
+impl Display for InvalidColorError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("invalid color name")
+    }
+}
 
 macro_rules! colors {
     (
-        $( $( #[ $meta:meta ] )* $color:ident $fg:literal $bg:literal ),* $(,)?
+        $( $( #[ $meta:meta ] )* $color:ident $fg:literal $bg:literal ( $names:pat ) ),* $(,)?
     ) => {
         /// Available standard ANSI colors
         #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -25,12 +41,35 @@ macro_rules! colors {
                 }
             }
         }
+
+        impl FromStr for Color {
+            type Err = InvalidColorError;
+
+            fn from_str(name: &str) -> Result<Self, Self::Err> {
+                Ok(match name {
+                    $( $names => Color::$color, )*
+                    _ => return Err(InvalidColorError),
+                })
+            }
+        }
     };
+}
+
+/// The provided [`Decoration`] name was invalid
+#[derive(Clone, Copy, Debug)]
+pub struct InvalidDecorationError;
+
+impl std::error::Error for InvalidDecorationError {}
+
+impl Display for InvalidDecorationError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("invalid decoration name")
+    }
 }
 
 macro_rules! decorations {
     (
-        $( $decoration:ident $apply:literal $remove:literal ),* $(,)?
+        $( $decoration:ident $apply:literal $remove:literal ( $names:pat ) ),* $(,)?
     ) => {
         /// Available standard ANSI text decorations
         #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -53,41 +92,52 @@ macro_rules! decorations {
                 }
             }
         }
+
+        impl FromStr for Decoration {
+            type Err = InvalidDecorationError;
+
+            fn from_str(name: &str) -> Result<Self, Self::Err> {
+                Ok(match name {
+                    $( $names => Decoration::$decoration, )*
+                    _ => return Err(InvalidDecorationError),
+                })
+            }
+        }
     };
 }
 
 colors! {
-    Black   30 40,
-    Red     31 41,
-    Green   32 42,
-    Yellow  33 43,
-    Blue    34 44,
-    Magenta 35 45,
-    Cyan    36 46,
-    White   37 47,
+    Black   30 40 ("black"),
+    Red     31 41 ("red"),
+    Green   32 42 ("green"),
+    Yellow  33 43 ("yellow"),
+    Blue    34 44 ("blue"),
+    Magenta 35 45 ("magenta"),
+    Cyan    36 46 ("cyan"),
+    White   37 47 ("white"),
     #[default]
-    Default 39 49,
+    Default 39 49 ("default"),
 
-    BrightBlack   90 100,
-    BrightRed     91 101,
-    BrightGreen   92 102,
-    BrightYellow  93 103,
-    BrightBlue    94 104,
-    BrightMagenta 95 105,
-    BrightCyan    96 106,
-    BrightWhite   97 107,
+    BrightBlack   90 100 ("bright-black"),
+    BrightRed     91 101 ("bright-red"),
+    BrightGreen   92 102 ("bright-green"),
+    BrightYellow  93 103 ("bright-yellow"),
+    BrightBlue    94 104 ("bright-blue"),
+    BrightMagenta 95 105 ("bright-magenta"),
+    BrightCyan    96 106 ("bright-cyan"),
+    BrightWhite   97 107 ("bright-white"),
 }
 
 decorations! {
-    Bold          1 22,
-    Dim           2 22,
-    Italic        3 23,
-    Underline     4 24,
-    SlowBlink     5 25,
-    FastBlink     6 25,
-    Invert        7 27,
-    Hide          8 28,
-    StrikeThrough 9 29,
+    Bold          1 22 ("bold"),
+    Dim           2 22 ("dim" | "faint"),
+    Italic        3 23 ("italic"),
+    Underline     4 24 ("underline"),
+    SlowBlink     5 25 ("slow-blink"),
+    FastBlink     6 25 ("fast-blink"),
+    Invert        7 27 ("invert" | "reverse"),
+    Hide          8 28 ("hide" | "conceal"),
+    StrikeThrough 9 29 ("strikethrough" | "strike-through"),
 }
 
 /// Styles that can be applied to a piece of text
