@@ -15,4 +15,4 @@ indexmap = "2.2"
 logos = "0.14"
 
 [dev-dependencies]
-insta = { version = "1.36.1", features = ["yaml"] }
+insta = "1.36.1"
