@@ -26,7 +26,7 @@ impl<'source> Iterator for Lexer<'source> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Logos, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Logos, PartialEq)]
 pub(crate) enum SyntaxKind {
     #[token("[")]
     SquareBracketOpen,
@@ -85,6 +85,7 @@ pub(crate) enum SyntaxKind {
     Text,
 
     Unknown,
+    Eof,
 }
 
 impl Display for SyntaxKind {
@@ -106,6 +107,7 @@ impl Display for SyntaxKind {
             Self::EscapeWhitespace => "escape whitespace",
             Self::Text => "text",
             Self::Unknown => "unknown",
+            Self::Eof => "end of file",
         })
     }
 }

@@ -1,4 +1,4 @@
-use super::Parser;
+use super::{ParseErrorReason, Parser};
 use crate::{
     ast::{Color, Decoration, Style},
     lexer::SyntaxKind,
@@ -32,7 +32,11 @@ pub(crate) fn style(p: &mut Parser) -> Option<Style> {
             let decorations = decorations_specifier(p, SyntaxKind::DecorationSpecifier)?;
             style.decoration = Some(decorations);
         } else {
-            // TODO: log error
+            p.error(ParseErrorReason::Expected(vec![
+                SyntaxKind::ForegroundSpecifier,
+                SyntaxKind::BackgroundSpecifier,
+                SyntaxKind::DecorationSpecifier,
+            ]));
             return None;
         };
 
