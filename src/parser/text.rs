@@ -302,68 +302,56 @@ mod tests {
 
     #[test]
     fn empty_token() {
-        let mut parser = Parser::new("[fg:red]()");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[fg:red]()");
     }
 
     #[test]
     fn token_with_foreground() {
-        let mut parser = Parser::new("[fg:red](inner)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[fg:red](inner)");
     }
 
     #[test]
     fn token_with_background() {
-        let mut parser = Parser::new("[bg:blue](inner)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[bg:blue](inner)");
     }
 
     #[test]
     fn token_with_single_decoration() {
-        let mut parser = Parser::new("[deco:dim](inner)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[deco:dim](inner)");
     }
 
     #[test]
     fn token_with_multiple_decorations() {
-        let mut parser = Parser::new("[deco:dim,italic](inner)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[deco:dim,italic](inner)");
     }
 
     #[test]
     fn token_with_multiple_styles() {
-        let mut parser = Parser::new("[deco:dim,italic;fg:red;bg:blue](inner)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[deco:dim,italic;fg:red;bg:blue](inner)");
     }
 
     #[test]
     fn token_with_leading_content() {
-        let mut parser = Parser::new("leading [fg:red](content)");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "leading [fg:red](content)");
     }
 
     #[test]
     fn token_with_trailing_content() {
-        let mut parser = Parser::new("[fg:red](content) trailing");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[fg:red](content) trailing");
     }
 
     #[test]
     fn token_with_leading_and_trailing_content() {
-        let mut parser = Parser::new("leading [fg:red](content) trailing");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "leading [fg:red](content) trailing");
     }
 
     #[test]
     fn nested_token() {
-        let mut parser = Parser::new("[fg:red]([bg:blue](inner))");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "[fg:red]([bg:blue](inner))");
     }
 
     #[test]
     fn kitchen_sink() {
-        let mut parser =
-            Parser::new("leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing");
-        insta::assert_debug_snapshot!(text(&mut parser));
+        assert_parse_snapshot!(text; "leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing");
     }
 }

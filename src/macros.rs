@@ -33,3 +33,35 @@ macro_rules! style {
         style!(@internal style; $( $rest )*)
     }};
 }
+
+/// Create a snapshot for testing parsing
+macro_rules! assert_parse_snapshot {
+    ($parser:ident; $source:literal) => {
+        insta::with_settings!({
+            description => $source,
+            omit_expression => true,
+        }, {
+            let mut parser = $crate::parser::Parser::new($source);
+            insta::assert_debug_snapshot!($parser(&mut parser));
+        });
+    };
+    (|$var:ident| $parser:expr; $source:literal) => {
+        insta::with_settings!({
+            description => $source,
+            omit_expression => true,
+        }, {
+            let mut parser = $crate::parser::Parser::new($source);
+            let f = |$var| $parser;
+            insta::assert_debug_snapshot!(f(&mut parser));
+        });
+    };
+    ($source:expr, $expression:expr) => {
+        insta::with_settings!({
+            description => $source,
+            omit_expression => true,
+        }, {
+            let parser = $crate::parser::Parser::new($source);
+            insta::assert_debug_snapshot!($expression);
+        });
+    };
+}

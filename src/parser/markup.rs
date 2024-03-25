@@ -15,85 +15,71 @@ mod tests {
 
     #[test]
     fn foreground_no_content() {
-        let mut parser = Parser::new("[fg:red]()");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red]()");
     }
 
     #[test]
     fn background_no_content() {
-        let mut parser = Parser::new("[bg:blue]()");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[bg:blue]()");
     }
 
     #[test]
     fn decoration_single_style_no_content() {
-        let mut parser = Parser::new("[deco:dim]()");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[deco:dim]()");
     }
 
     #[test]
     fn decoration_multiple_styles_no_content() {
-        let mut parser = Parser::new("[deco:dim,italic]()");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[deco:dim,italic]()");
     }
 
     #[test]
     fn lowercase_alphabetic_content() {
-        let mut parser = Parser::new("[fg:red](hello)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](hello)");
     }
 
     #[test]
     fn uppercase_alphabetic_content() {
-        let mut parser = Parser::new("[fg:red](HELLO)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](HELLO)");
     }
 
     #[test]
     fn mixed_alphabetic_content() {
-        let mut parser = Parser::new("[fg:red](hElLo)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](hElLo)");
     }
 
     #[test]
     fn numeric_content() {
-        let mut parser = Parser::new("[fg:red](12345)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](12345)");
     }
 
     #[test]
     fn special_character_content() {
-        let mut parser = Parser::new("[fg:red](!@#$%^)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](!@#$%^)");
     }
 
     #[test]
     fn escaped_character_content() {
-        let mut parser = Parser::new("[fg:red](\\(\\[\\]\\))");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](\\(\\[\\]\\))");
     }
 
     #[test]
     fn nested_token() {
-        let mut parser = Parser::new("[fg:red]([bg:blue](inner))");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red]([bg:blue](inner))");
     }
 
     #[test]
     fn nested_token_with_leading_content() {
-        let mut parser = Parser::new("[fg:red](leading [bg:blue](inner))");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](leading [bg:blue](inner))");
     }
 
     #[test]
     fn nested_token_with_trailing_content() {
-        let mut parser = Parser::new("[fg:red]([bg:blue](inner) trailing)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red]([bg:blue](inner) trailing)");
     }
 
     #[test]
     fn nested_token_with_leading_and_trailing_content() {
-        let mut parser = Parser::new("[fg:red](leading [bg:blue](inner) trailing)");
-        insta::assert_debug_snapshot!(markup(&mut parser));
+        assert_parse_snapshot!(markup; "[fg:red](leading [bg:blue](inner) trailing)");
     }
 }
