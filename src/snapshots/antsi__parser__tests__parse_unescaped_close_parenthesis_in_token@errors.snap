@@ -1,0 +1,15 @@
+---
+source: src/parser.rs
+description: "[fg:red](before ) after)"
+---
+[
+    ParseError {
+        span: Some(
+            23..24,
+        ),
+        at: ParenthesisClose,
+        reason: UnescapedControlCharacter(
+            ')',
+        ),
+    },
+]

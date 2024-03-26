@@ -1,0 +1,9 @@
+---
+source: src/parser.rs
+description: "before \\a after"
+---
+[
+    Content(
+        " after",
+    ),
+]

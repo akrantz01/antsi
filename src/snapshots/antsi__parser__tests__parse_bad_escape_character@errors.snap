@@ -1,0 +1,26 @@
+---
+source: src/parser.rs
+description: "before \\a after"
+---
+[
+    ParseError {
+        span: Some(
+            7..9,
+        ),
+        at: EscapeCharacter,
+        reason: UnknownEscapeSequence(
+            'a',
+        ),
+    },
+    ParseError {
+        span: Some(
+            7..9,
+        ),
+        at: EscapeCharacter,
+        reason: Expected(
+            [
+                Eof,
+            ],
+        ),
+    },
+]

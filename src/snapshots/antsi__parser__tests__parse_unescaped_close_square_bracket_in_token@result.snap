@@ -1,0 +1,9 @@
+---
+source: src/parser.rs
+description: "[fg:red](before ] after)"
+---
+[
+    Content(
+        " after",
+    ),
+]

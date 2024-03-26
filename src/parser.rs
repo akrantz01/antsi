@@ -1,8 +1,9 @@
+use crate::ast::Tokens;
 use crate::{
     ast::Token,
     lexer::{Lexeme, Lexer, SyntaxKind},
 };
-use std::{iter::Peekable, ops::Range};
+use std::iter::Peekable;
 use text_size::TextRange;
 
 mod content;
@@ -26,13 +27,35 @@ impl<'source> Parser<'source> {
 
     /// Perform the parsing operation
     pub fn parse(mut self) -> (Vec<Token>, Vec<ParseError>) {
-        let tokens = text::text(&mut self).unwrap_or_default().into();
+        let mut tokens = Tokens::default();
 
-        if self.peek().is_some() {
-            self.error(ParseErrorReason::Expected(vec![SyntaxKind::Eof]));
+        loop {
+            tokens.extend(text::text(&mut self).unwrap_or_default());
+
+            if let Some(lexeme) = self.peek() {
+                match dbg!(lexeme) {
+                    SyntaxKind::ParenthesisOpen => {
+                        self.error(ParseErrorReason::UnescapedControlCharacter('('))
+                    }
+                    SyntaxKind::ParenthesisClose => {
+                        self.error(ParseErrorReason::UnescapedControlCharacter(')'))
+                    }
+                    SyntaxKind::SquareBracketOpen => {
+                        self.error(ParseErrorReason::UnescapedControlCharacter('['))
+                    }
+                    SyntaxKind::SquareBracketClose => {
+                        self.error(ParseErrorReason::UnescapedControlCharacter(']'))
+                    }
+                    _ => self.error(ParseErrorReason::Expected(vec![SyntaxKind::Eof])),
+                }
+
+                self.bump();
+            } else {
+                break;
+            }
         }
 
-        (tokens, self.errors)
+        (tokens.into(), self.errors)
     }
 
     /// Get the next syntax item from the lexer without consuming it
@@ -103,25 +126,141 @@ pub enum ParseErrorReason {
     Expected(Vec<SyntaxKind>),
     /// Encountered an escape sequence that is not valid
     UnknownEscapeSequence(char),
+    /// Encountered an unescaped control character
+    UnescapedControlCharacter(char),
 }
 
 #[cfg(test)]
 mod tests {
     use super::Parser;
+    use crate::ast::Token;
+
+    macro_rules! with_source {
+        (
+            $source:literal,
+            $( { $( $name:ident => $value:expr ),+ $(,)? } , )?
+            |$result:ident, $errors:ident| $actions:expr
+        ) => {
+            insta::with_settings!({
+                description => $source,
+                omit_expression => true,
+                $( $( $name => $value, )+ )?
+            }, {
+                let ($result, $errors) = $crate::parser::Parser::new($source).parse();
+                $actions;
+            })
+        };
+    }
+
+    macro_rules! assert_snapshot {
+        ( { $( $name:ident => $value:expr ),+ $(,)? }, $expr:expr ) => {
+            insta::with_settings!({
+                $( $name => $value, )+
+            }, {
+                insta::assert_debug_snapshot!($expr);
+            });
+        };
+        ($expr:expr) => {
+            insta::assert_debug_snapshot!($expr);
+        }
+    }
 
     #[test]
     fn parse_empty() {
-        let (result, errors) = Parser::new("").parse();
-        assert_eq!(result, vec![]);
-        assert_eq!(errors, vec![]);
+        with_source!("", |result, errors| {
+            assert_eq!(result, vec![]);
+            assert_eq!(errors, vec![]);
+        });
     }
 
     #[test]
     fn parse_text() {
-        let (result, errors) =
-            Parser::new("this some text with wh ite\nspa\tce and numb3r5 and $ymb@l$ and CAPITALS")
-                .parse();
-        assert_eq!(errors, vec![]);
-        insta::assert_debug_snapshot!(result);
+        with_source!(
+            "this some text with wh ite\nspa\tce and numb3r5 and $ymb@l$ and CAPITALS",
+            |result, errors| {
+                assert_eq!(errors, vec![]);
+                assert_snapshot!(result);
+            }
+        );
+    }
+
+    #[test]
+    fn parse_unescaped_open_parenthesis_in_plaintext() {
+        with_source!("before ( after", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_close_parenthesis_in_plaintext() {
+        with_source!("before ) after", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_open_square_bracket_in_plaintext() {
+        with_source!("before [ after", |result, errors| {
+            assert_eq!(result, vec![]);
+            assert_snapshot!(errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_close_square_bracket_in_plaintext() {
+        with_source!("before ] after", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_open_parenthesis_in_token() {
+        with_source!("[fg:red](before ( after)", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_close_parenthesis_in_token() {
+        with_source!("[fg:red](before ) after)", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_open_square_bracket_in_token() {
+        with_source!("[fg:red](before [ after)", |result, errors| {
+            assert_eq!(result, vec![]);
+            assert_snapshot!(errors);
+        });
+    }
+
+    #[test]
+    fn parse_unescaped_close_square_bracket_in_token() {
+        with_source!("[fg:red](before ] after)", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_bad_escape_character() {
+        with_source!("before \\a after", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
+    }
+
+    #[test]
+    fn parse_bad_escape_character_in_token() {
+        with_source!("[fg:red](before \\a after)", |result, errors| {
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
+        });
     }
 }
