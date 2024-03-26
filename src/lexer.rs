@@ -81,7 +81,7 @@ pub(crate) enum SyntaxKind {
     )]
     Decoration,
 
-    #[regex(r#"\\[\\\[\]()]"#)]
+    #[regex(r#"\\[^ \r\n\t]"#)]
     EscapeCharacter,
 
     #[regex(r#"\\[ \r\n\t]+"#)]
@@ -408,6 +408,14 @@ mod tests {
     #[test]
     fn escape_character_close_parenthesis() {
         check("\\)", SyntaxKind::EscapeCharacter);
+    }
+
+    #[test]
+    fn escape_character_invalid() {
+        check("\\a", SyntaxKind::EscapeCharacter);
+        check("\\$", SyntaxKind::EscapeCharacter);
+        check("\\Z", SyntaxKind::EscapeCharacter);
+        check("\\4", SyntaxKind::EscapeCharacter);
     }
 
     #[test]

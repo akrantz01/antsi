@@ -1,4 +1,4 @@
-use super::{markup::markup, Parser};
+use super::{markup::markup, ParseErrorReason, Parser};
 use crate::{ast::Tokens, lexer::SyntaxKind};
 
 /// Parse a piece of text that may content styled markup
@@ -20,10 +20,20 @@ pub(crate) fn text(p: &mut Parser) -> Option<Tokens> {
                 p.bump();
             }
             Some(SyntaxKind::EscapeCharacter) => {
-                let lexeme = p.bump();
+                let lexeme = p.peek_lexeme().unwrap();
 
                 assert_eq!(lexeme.text.len(), 2);
-                tokens.push_char(lexeme.text.chars().nth(1).unwrap());
+                let character = lexeme.text.chars().nth(1).unwrap();
+                match character {
+                    '\\' | '(' | ')' | '[' | ']' => {
+                        tokens.push_char(character);
+                        p.bump();
+                    }
+                    _ => {
+                        p.error(ParseErrorReason::UnknownEscapeSequence(character));
+                        return None;
+                    }
+                }
             }
             Some(_) => {
                 let lexeme = p.bump();
@@ -508,6 +518,34 @@ mod tests {
                 span: None,
                 at: SyntaxKind::Eof,
                 reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn invalid_escape_character() {
+        let mut parser = Parser::new("\\a");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(0..2)),
+                at: SyntaxKind::EscapeCharacter,
+                reason: ParseErrorReason::UnknownEscapeSequence('a')
+            }]
+        );
+    }
+
+    #[test]
+    fn token_invalid_escape_character() {
+        let mut parser = Parser::new("[fg:red](\\a)");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(9..11)),
+                at: SyntaxKind::EscapeCharacter,
+                reason: ParseErrorReason::UnknownEscapeSequence('a')
             }]
         );
     }

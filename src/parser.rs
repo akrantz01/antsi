@@ -40,6 +40,11 @@ impl<'source> Parser<'source> {
         self.lexer.peek().map(|lexeme| lexeme.kind)
     }
 
+    /// Get the next lexeme from the lexer without consuming it
+    pub(crate) fn peek_lexeme(&mut self) -> Option<&Lexeme<'_>> {
+        self.lexer.peek()
+    }
+
     /// Pop the next syntax item from the lexer
     pub(crate) fn bump(&mut self) -> Lexeme {
         self.lexer.next().expect("missing token")
@@ -72,7 +77,7 @@ impl<'source> Parser<'source> {
 
     /// Report an error during parsing
     pub(crate) fn error(&mut self, reason: ParseErrorReason) {
-        let (span, at) = match self.lexer.peek() {
+        let (span, at) = match self.peek_lexeme() {
             Some(lexeme) => (Some(lexeme.span), lexeme.kind),
             None => (None, SyntaxKind::Eof),
         };
@@ -96,6 +101,8 @@ pub struct ParseError {
 pub enum ParseErrorReason {
     /// Expected a token, but found something else
     Expected(Vec<SyntaxKind>),
+    /// Encountered an escape sequence that is not valid
+    UnknownEscapeSequence(char),
 }
 
 #[cfg(test)]
