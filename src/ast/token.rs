@@ -60,6 +60,30 @@ impl Tokens {
             Some(Token::Styled { .. }) | None => self.0.push(Token::Content(ch.to_string())),
         }
     }
+
+    /// Add all the tokens from another sequence onto the current one
+    pub fn extend<T>(&mut self, other: T)
+    where
+        T: Into<Tokens>,
+    {
+        let other = other.into();
+        if other.0.is_empty() {
+            return;
+        } else if self.0.is_empty() {
+            *self = other;
+            return;
+        }
+
+        let mut tokens = other.0.into_iter().peekable();
+        if let Some(Token::Content(last)) = self.0.last_mut() {
+            while let Some(Token::Content(content)) = tokens.peek() {
+                last.push_str(content);
+                tokens.next();
+            }
+        }
+
+        self.0.extend(tokens);
+    }
 }
 
 #[cfg(test)]
@@ -212,6 +236,241 @@ mod tests {
         assert_eq!(
             tokens,
             Tokens::from(vec![Token::Content(String::from("existing T"))])
+        );
+    }
+
+    #[test]
+    fn extend_both_empty() {
+        let mut tokens = Tokens::default();
+        tokens.extend(Tokens::default());
+        assert_eq!(tokens, Tokens::from(vec![]));
+    }
+
+    #[test]
+    fn extend_empty_with_content_token() {
+        let mut tokens = Tokens::default();
+        tokens.extend(vec![Token::Content(String::from("testing"))]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![Token::Content(String::from("testing"))])
+        );
+    }
+
+    #[test]
+    fn extend_empty_with_styled_token() {
+        let mut tokens = Tokens::default();
+        tokens.extend(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("testing"))]
+            }])
+        );
+    }
+
+    #[test]
+    fn extend_single_content_token_with_empty() {
+        let mut tokens = Tokens::from(vec![Token::Content(String::from("existing"))]);
+        tokens.extend(vec![]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![Token::Content(String::from("existing"))])
+        );
+    }
+
+    #[test]
+    fn extend_single_content_token_with_content_token() {
+        let mut tokens = Tokens::from(vec![Token::Content(String::from("existing"))]);
+        tokens.extend(vec![Token::Content(String::from("testing"))]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![Token::Content(String::from("existingtesting"))])
+        );
+    }
+
+    #[test]
+    fn extend_single_content_token_with_styled_token() {
+        let mut tokens = Tokens::from(vec![Token::Content(String::from("existing"))]);
+        tokens.extend(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Content(String::from("existing")),
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_single_styled_token_with_empty() {
+        let mut tokens = Tokens::from(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        tokens.extend(vec![]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("testing"))],
+            }])
+        );
+    }
+
+    #[test]
+    fn extend_single_styled_token_with_content_token() {
+        let mut tokens = Tokens::from(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        tokens.extend(vec![Token::Content(String::from("testing"))]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                },
+                Token::Content(String::from("testing"))
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_single_styled_token_with_styled_token() {
+        let mut tokens = Tokens::from(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        tokens.extend(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                },
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_styled_and_content_token_with_styled_token() {
+        let mut tokens = Tokens::from(vec![
+            Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("existing styled"))],
+            },
+            Token::Content(String::from("existing content")),
+        ]);
+        tokens.extend(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("existing styled"))],
+                },
+                Token::Content(String::from("existing content")),
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_content_and_styled_token_with_styled_token() {
+        let mut tokens = Tokens::from(vec![
+            Token::Content(String::from("existing content")),
+            Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("existing styled"))],
+            },
+        ]);
+        tokens.extend(vec![Token::Styled {
+            style: style!(),
+            content: vec![Token::Content(String::from("testing"))],
+        }]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Content(String::from("existing content")),
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("existing styled"))],
+                },
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("testing"))],
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_styled_and_content_token_with_content_token() {
+        let mut tokens = Tokens::from(vec![
+            Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("existing styled"))],
+            },
+            Token::Content(String::from("existing content")),
+        ]);
+        tokens.extend(vec![Token::Content(String::from("testing"))]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("existing styled"))],
+                },
+                Token::Content(String::from("existing contenttesting")),
+            ])
+        );
+    }
+
+    #[test]
+    fn extend_content_and_styled_token_with_content_token() {
+        let mut tokens = Tokens::from(vec![
+            Token::Content(String::from("existing content")),
+            Token::Styled {
+                style: style!(),
+                content: vec![Token::Content(String::from("existing styled"))],
+            },
+        ]);
+        tokens.extend(vec![Token::Content(String::from("testing"))]);
+        assert_eq!(
+            tokens,
+            Tokens::from(vec![
+                Token::Content(String::from("existing content")),
+                Token::Styled {
+                    style: style!(),
+                    content: vec![Token::Content(String::from("existing styled"))],
+                },
+                Token::Content(String::from("testing"))
+            ])
         );
     }
 }
