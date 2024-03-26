@@ -3,6 +3,7 @@ use std::{
     fmt::{Display, Formatter},
     ops::Range,
 };
+use text_size::{TextRange, TextSize};
 
 pub(crate) struct Lexer<'source>(logos::Lexer<'source, SyntaxKind>);
 
@@ -17,11 +18,18 @@ impl<'source> Iterator for Lexer<'source> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.0.next()?.unwrap_or(SyntaxKind::Unknown);
+        let span = {
+            let Range { start, end } = self.0.span();
+            let start = TextSize::try_from(start).unwrap();
+            let end = TextSize::try_from(end).unwrap();
+
+            TextRange::new(start, end)
+        };
 
         Some(Lexeme {
+            span,
             kind,
             text: self.0.slice(),
-            span: self.0.span(),
         })
     }
 }
@@ -116,13 +124,14 @@ impl Display for SyntaxKind {
 pub(crate) struct Lexeme<'source> {
     pub kind: SyntaxKind,
     pub text: &'source str,
-    pub span: Range<usize>,
+    pub span: TextRange,
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Lexer, SyntaxKind};
     use crate::ast::{Color, Decoration};
+    use text_size::TextSize;
 
     fn check(input: &str, kind: SyntaxKind) {
         let mut lexer = Lexer::new(input);
@@ -130,7 +139,7 @@ mod tests {
         let token = lexer.next().unwrap();
         assert_eq!(token.kind, kind);
         assert_eq!(token.text, input);
-        assert_ne!(token.span.len(), 0);
+        assert_ne!(token.span.len(), TextSize::new(0));
     }
 
     #[test]

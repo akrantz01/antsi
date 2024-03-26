@@ -3,6 +3,7 @@ use crate::{
     lexer::{Lexeme, Lexer, SyntaxKind},
 };
 use std::{iter::Peekable, ops::Range};
+use text_size::TextRange;
 
 mod content;
 mod markup;
@@ -72,7 +73,7 @@ impl<'source> Parser<'source> {
     /// Report an error during parsing
     pub(crate) fn error(&mut self, reason: ParseErrorReason) {
         let (span, at) = match self.lexer.peek() {
-            Some(lexeme) => (Some(lexeme.span.clone()), lexeme.kind),
+            Some(lexeme) => (Some(lexeme.span), lexeme.kind),
             None => (None, SyntaxKind::Eof),
         };
 
@@ -84,7 +85,7 @@ impl<'source> Parser<'source> {
 #[derive(Clone, Debug)]
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct ParseError {
-    span: Option<Range<usize>>,
+    span: Option<TextRange>,
     at: SyntaxKind,
     reason: ParseErrorReason,
 }
