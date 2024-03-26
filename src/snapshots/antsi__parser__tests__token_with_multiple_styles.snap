@@ -1,0 +1,27 @@
+---
+source: src/parser.rs
+description: "[deco:dim,italic;fg:red;bg:blue](inner)"
+---
+[
+    Styled {
+        content: [
+            Content(
+                "inner",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: Some(
+                Blue,
+            ),
+            decoration: Some(
+                {
+                    Dim,
+                    Italic,
+                },
+            ),
+        },
+    },
+]

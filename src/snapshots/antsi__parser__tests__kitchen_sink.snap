@@ -1,0 +1,62 @@
+---
+source: src/parser.rs
+description: "leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing"
+---
+[
+    Content(
+        "leading ",
+    ),
+    Styled {
+        content: [
+            Content(
+                "one ",
+            ),
+            Styled {
+                content: [
+                    Content(
+                        "two ",
+                    ),
+                    Styled {
+                        content: [
+                            Content(
+                                "three",
+                            ),
+                        ],
+                        style: Style {
+                            foreground: None,
+                            background: None,
+                            decoration: Some(
+                                {
+                                    Dim,
+                                },
+                            ),
+                        },
+                    },
+                    Content(
+                        " two",
+                    ),
+                ],
+                style: Style {
+                    foreground: None,
+                    background: Some(
+                        Blue,
+                    ),
+                    decoration: None,
+                },
+            },
+            Content(
+                " one",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: None,
+            decoration: None,
+        },
+    },
+    Content(
+        " trailing",
+    ),
+]

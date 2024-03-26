@@ -1,0 +1,20 @@
+---
+source: src/parser.rs
+description: "[fg:red](inner)"
+---
+[
+    Styled {
+        content: [
+            Content(
+                "inner",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: None,
+            decoration: None,
+        },
+    },
+]

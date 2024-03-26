@@ -1,0 +1,20 @@
+---
+source: src/parser.rs
+description: "[bg:blue](inner)"
+---
+[
+    Styled {
+        content: [
+            Content(
+                "inner",
+            ),
+        ],
+        style: Style {
+            foreground: None,
+            background: Some(
+                Blue,
+            ),
+            decoration: None,
+        },
+    },
+]

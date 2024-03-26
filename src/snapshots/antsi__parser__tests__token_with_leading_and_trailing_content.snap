@@ -1,0 +1,26 @@
+---
+source: src/parser.rs
+description: "leading [fg:red](content) trailing"
+---
+[
+    Content(
+        "leading ",
+    ),
+    Styled {
+        content: [
+            Content(
+                "content",
+            ),
+        ],
+        style: Style {
+            foreground: Some(
+                Red,
+            ),
+            background: None,
+            decoration: None,
+        },
+    },
+    Content(
+        " trailing",
+    ),
+]

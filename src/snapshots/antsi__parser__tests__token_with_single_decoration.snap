@@ -1,0 +1,22 @@
+---
+source: src/parser.rs
+description: "[deco:dim](inner)"
+---
+[
+    Styled {
+        content: [
+            Content(
+                "inner",
+            ),
+        ],
+        style: Style {
+            foreground: None,
+            background: None,
+            decoration: Some(
+                {
+                    Dim,
+                },
+            ),
+        },
+    },
+]
