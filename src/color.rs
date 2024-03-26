@@ -1,9 +1,10 @@
 use crate::{
     ast::{CurrentStyle, Token},
-    parser::{ParseError, Parser},
+    error::Error,
+    parser::Parser,
 };
 
-pub fn colorize(input: &str) -> Result<String, Vec<ParseError>> {
+pub fn colorize(input: &str) -> Result<String, Vec<Error>> {
     let (tokens, errors) = Parser::new(input).parse();
     if !errors.is_empty() {
         return Err(errors);

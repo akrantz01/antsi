@@ -1,4 +1,4 @@
-use super::{ParseErrorReason, Parser};
+use super::{Parser, Reason};
 use crate::{
     ast::{Color, Decoration, Style},
     lexer::SyntaxKind,
@@ -32,7 +32,7 @@ pub(crate) fn style(p: &mut Parser) -> Option<Style> {
             let decorations = decorations_specifier(p, SyntaxKind::DecorationSpecifier)?;
             style.decoration = Some(decorations);
         } else {
-            p.error(ParseErrorReason::Expected(vec![
+            p.error(Reason::Expected(vec![
                 SyntaxKind::ForegroundSpecifier,
                 SyntaxKind::BackgroundSpecifier,
                 SyntaxKind::DecorationSpecifier,
@@ -88,8 +88,8 @@ mod tests {
     use super::{color_specifier, decorations_specifier, style, Parser};
     use crate::{
         ast::{Color, Decoration},
+        error::{Error, Reason},
         lexer::SyntaxKind,
-        parser::{ParseError, ParseErrorReason},
     };
 
     #[test]
@@ -155,10 +155,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(0..4)),
                 at: SyntaxKind::DecorationSpecifier,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ForegroundSpecifier])
+                reason: Reason::Expected(vec![SyntaxKind::ForegroundSpecifier])
             }]
         );
     }
@@ -170,10 +170,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(2..3)),
                 at: SyntaxKind::Semicolon,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon])
+                reason: Reason::Expected(vec![SyntaxKind::Colon])
             }]
         );
     }
@@ -185,10 +185,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(3..10)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+                reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
     }
@@ -261,10 +261,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(0..2)),
                 at: SyntaxKind::ForegroundSpecifier,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::DecorationSpecifier])
+                reason: Reason::Expected(vec![SyntaxKind::DecorationSpecifier])
             }]
         );
     }
@@ -276,10 +276,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(4..5)),
                 at: SyntaxKind::Semicolon,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon])
+                reason: Reason::Expected(vec![SyntaxKind::Colon])
             }]
         );
     }
@@ -291,10 +291,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(5..12)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+                reason: Reason::Expected(vec![SyntaxKind::Decoration])
             }]
         );
     }
@@ -306,10 +306,10 @@ mod tests {
         assert_eq!(result, None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(10..17)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+                reason: Reason::Expected(vec![SyntaxKind::Decoration])
             }]
         );
     }
@@ -530,10 +530,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(1..11)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![
+                reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,
                     SyntaxKind::DecorationSpecifier
@@ -548,10 +548,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(4..11)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+                reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
     }
@@ -562,10 +562,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(4..11)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+                reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
     }
@@ -576,10 +576,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(6..13)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+                reason: Reason::Expected(vec![SyntaxKind::Decoration])
             }]
         );
     }
@@ -590,10 +590,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(3..4)),
                 at: SyntaxKind::SquareBracketClose,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon]),
+                reason: Reason::Expected(vec![SyntaxKind::Colon]),
             }]
         );
     }
@@ -604,10 +604,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(11..18)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+                reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
     }
@@ -618,10 +618,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(11..18)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+                reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
     }
@@ -632,10 +632,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(13..20)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+                reason: Reason::Expected(vec![SyntaxKind::Decoration])
             }]
         );
     }
@@ -646,10 +646,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(12..13)),
                 at: SyntaxKind::Semicolon,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon]),
+                reason: Reason::Expected(vec![SyntaxKind::Colon]),
             }]
         );
     }
@@ -660,10 +660,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: None,
                 at: SyntaxKind::Eof,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::SquareBracketClose]),
+                reason: Reason::Expected(vec![SyntaxKind::SquareBracketClose]),
             }]
         )
     }
@@ -674,10 +674,10 @@ mod tests {
         assert_eq!(style(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(1..2)),
                 at: SyntaxKind::SquareBracketClose,
-                reason: ParseErrorReason::Expected(vec![
+                reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,
                     SyntaxKind::DecorationSpecifier

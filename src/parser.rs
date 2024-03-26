@@ -1,10 +1,9 @@
-use crate::ast::Tokens;
 use crate::{
-    ast::Token,
+    ast::{Token, Tokens},
+    error::{Error, Reason},
     lexer::{Lexeme, Lexer, SyntaxKind},
 };
 use std::iter::Peekable;
-use text_size::TextRange;
 
 mod content;
 mod markup;
@@ -14,7 +13,7 @@ mod text;
 /// Convert a piece of text, potentially containing styled markup, to a sequence of tokens
 pub struct Parser<'source> {
     lexer: Peekable<Lexer<'source>>,
-    errors: Vec<ParseError>,
+    errors: Vec<Error>,
 }
 
 impl<'source> Parser<'source> {
@@ -26,7 +25,7 @@ impl<'source> Parser<'source> {
     }
 
     /// Perform the parsing operation
-    pub fn parse(mut self) -> (Vec<Token>, Vec<ParseError>) {
+    pub fn parse(mut self) -> (Vec<Token>, Vec<Error>) {
         let mut tokens = Tokens::default();
 
         loop {
@@ -35,18 +34,18 @@ impl<'source> Parser<'source> {
             if let Some(lexeme) = self.peek() {
                 match dbg!(lexeme) {
                     SyntaxKind::ParenthesisOpen => {
-                        self.error(ParseErrorReason::UnescapedControlCharacter('('))
+                        self.error(Reason::UnescapedControlCharacter('('))
                     }
                     SyntaxKind::ParenthesisClose => {
-                        self.error(ParseErrorReason::UnescapedControlCharacter(')'))
+                        self.error(Reason::UnescapedControlCharacter(')'))
                     }
                     SyntaxKind::SquareBracketOpen => {
-                        self.error(ParseErrorReason::UnescapedControlCharacter('['))
+                        self.error(Reason::UnescapedControlCharacter('['))
                     }
                     SyntaxKind::SquareBracketClose => {
-                        self.error(ParseErrorReason::UnescapedControlCharacter(']'))
+                        self.error(Reason::UnescapedControlCharacter(']'))
                     }
-                    _ => self.error(ParseErrorReason::Expected(vec![SyntaxKind::Eof])),
+                    _ => self.error(Reason::Expected(vec![SyntaxKind::Eof])),
                 }
 
                 self.bump();
@@ -93,41 +92,20 @@ impl<'source> Parser<'source> {
         if self.at(kind) {
             Some(self.bump())
         } else {
-            self.error(ParseErrorReason::Expected(vec![kind]));
+            self.error(Reason::Expected(vec![kind]));
             None
         }
     }
 
     /// Report an error during parsing
-    pub(crate) fn error(&mut self, reason: ParseErrorReason) {
+    pub(crate) fn error(&mut self, reason: Reason) {
         let (span, at) = match self.peek_lexeme() {
             Some(lexeme) => (Some(lexeme.span), lexeme.kind),
             None => (None, SyntaxKind::Eof),
         };
 
-        self.errors.push(ParseError { span, at, reason })
+        self.errors.push(Error { span, at, reason })
     }
-}
-
-/// An error that occurred while parsing
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(Eq, PartialEq))]
-pub struct ParseError {
-    span: Option<TextRange>,
-    at: SyntaxKind,
-    reason: ParseErrorReason,
-}
-
-/// The reason for the parsing failure
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(Eq, PartialEq))]
-pub enum ParseErrorReason {
-    /// Expected a token, but found something else
-    Expected(Vec<SyntaxKind>),
-    /// Encountered an escape sequence that is not valid
-    UnknownEscapeSequence(char),
-    /// Encountered an unescaped control character
-    UnescapedControlCharacter(char),
 }
 
 #[cfg(test)]

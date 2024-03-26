@@ -3,7 +3,7 @@ source: src/parser.rs
 description: "before [ after"
 ---
 [
-    ParseError {
+    Error {
         span: Some(
             8..14,
         ),
@@ -16,7 +16,7 @@ description: "before [ after"
             ],
         ),
     },
-    ParseError {
+    Error {
         span: Some(
             8..14,
         ),

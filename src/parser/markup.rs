@@ -13,8 +13,8 @@ pub(crate) fn markup(p: &mut Parser) -> Option<Token> {
 mod tests {
     use super::{markup, Parser};
     use crate::{
+        error::{Error, Reason},
         lexer::SyntaxKind,
-        parser::{ParseError, ParseErrorReason},
     };
 
     #[test]
@@ -93,10 +93,10 @@ mod tests {
         assert_eq!(markup(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(1..2)),
                 at: SyntaxKind::SquareBracketClose,
-                reason: ParseErrorReason::Expected(vec![
+                reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,
                     SyntaxKind::DecorationSpecifier
@@ -111,10 +111,10 @@ mod tests {
         assert_eq!(markup(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(7..8)),
                 at: SyntaxKind::ParenthesisOpen,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::SquareBracketClose])
+                reason: Reason::Expected(vec![SyntaxKind::SquareBracketClose])
             }]
         );
     }
@@ -125,10 +125,10 @@ mod tests {
         assert_eq!(markup(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(8..15)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisOpen])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisOpen])
             }]
         );
     }
@@ -139,10 +139,10 @@ mod tests {
         assert_eq!(markup(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: None,
                 at: SyntaxKind::Eof,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisClose])
             }]
         );
     }
@@ -153,10 +153,10 @@ mod tests {
         assert_eq!(markup(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(8..9)),
                 at: SyntaxKind::Text,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisOpen])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisOpen])
             }]
         );
     }

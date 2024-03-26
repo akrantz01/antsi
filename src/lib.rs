@@ -5,6 +5,7 @@ use pyo3::prelude::*;
 mod macros;
 mod ast;
 mod color;
+mod error;
 mod lexer;
 mod parser;
 

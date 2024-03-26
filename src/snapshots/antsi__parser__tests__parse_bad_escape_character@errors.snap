@@ -3,7 +3,7 @@ source: src/parser.rs
 description: "before \\a after"
 ---
 [
-    ParseError {
+    Error {
         span: Some(
             7..9,
         ),

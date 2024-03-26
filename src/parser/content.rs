@@ -17,8 +17,8 @@ mod tests {
     use super::{content, Parser};
     use crate::{
         ast::{Token, Tokens},
+        error::{Error, Reason},
         lexer::SyntaxKind,
-        parser::{ParseError, ParseErrorReason},
     };
 
     #[test]
@@ -231,10 +231,10 @@ mod tests {
         assert_eq!(content(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: None,
                 at: SyntaxKind::Eof,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisClose])
             }]
         );
     }
@@ -245,10 +245,10 @@ mod tests {
         assert_eq!(content(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(2..3)),
                 at: SyntaxKind::ParenthesisClose,
-                reason: ParseErrorReason::Expected(vec![
+                reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,
                     SyntaxKind::DecorationSpecifier
@@ -263,10 +263,10 @@ mod tests {
         assert_eq!(content(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(1..2)),
                 at: SyntaxKind::SquareBracketClose,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisClose])
             }]
         );
     }
@@ -277,10 +277,10 @@ mod tests {
         assert_eq!(content(&mut parser), None);
         assert_eq!(
             parser.errors,
-            vec![ParseError {
+            vec![Error {
                 span: Some(span!(1..2)),
                 at: SyntaxKind::ParenthesisOpen,
-                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+                reason: Reason::Expected(vec![SyntaxKind::ParenthesisClose])
             }]
         );
     }

@@ -3,7 +3,7 @@ source: src/parser.rs
 description: "[fg:red](before [ after)"
 ---
 [
-    ParseError {
+    Error {
         span: Some(
             17..23,
         ),
@@ -16,7 +16,7 @@ description: "[fg:red](before [ after)"
             ],
         ),
     },
-    ParseError {
+    Error {
         span: Some(
             17..23,
         ),
@@ -27,7 +27,7 @@ description: "[fg:red](before [ after)"
             ],
         ),
     },
-    ParseError {
+    Error {
         span: Some(
             23..24,
         ),
