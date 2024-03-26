@@ -35,6 +35,7 @@ pub(crate) fn text(p: &mut Parser) -> Option<Tokens> {
                     }
                 }
             }
+            Some(SyntaxKind::Eof | SyntaxKind::Unknown) => unreachable!(),
             Some(_) => {
                 let lexeme = p.bump();
                 tokens.push_str(lexeme.text);
