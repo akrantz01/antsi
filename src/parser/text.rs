@@ -42,6 +42,7 @@ mod tests {
     use crate::{
         ast::{Token, Tokens},
         lexer::SyntaxKind,
+        parser::{ParseError, ParseErrorReason},
     };
 
     #[test]
@@ -353,5 +354,161 @@ mod tests {
     #[test]
     fn kitchen_sink() {
         assert_parse_snapshot!(text; "leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing");
+    }
+
+    #[test]
+    fn unescaped_open_parenthesis_in_plaintext() {
+        let mut parser = Parser::new("before ( after");
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![Token::Content(String::from("before "))]))
+        );
+        assert_eq!(parser.peek(), Some(SyntaxKind::ParenthesisOpen));
+    }
+
+    #[test]
+    fn unescaped_close_parenthesis_in_plaintext() {
+        let mut parser = Parser::new("before ) after");
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![Token::Content(String::from("before "))]))
+        );
+        assert_eq!(parser.peek(), Some(SyntaxKind::ParenthesisClose));
+    }
+
+    #[test]
+    fn unescaped_open_square_bracket_in_plaintext() {
+        let mut parser = Parser::new("before [ after");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(8..14)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier,
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_close_square_bracket_in_plaintext() {
+        let mut parser = Parser::new("before ] after");
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![Token::Content(String::from("before "))]))
+        );
+        assert_eq!(parser.peek(), Some(SyntaxKind::SquareBracketClose));
+    }
+
+    #[test]
+    fn unescaped_open_parenthesis_in_token() {
+        let mut parser = Parser::new("[fg:red](before ( after)");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(16..17)),
+                at: SyntaxKind::ParenthesisOpen,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_close_parenthesis_in_token() {
+        let mut parser = Parser::new("[fg:red](before ) after)");
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![
+                Token::Styled {
+                    content: vec![Token::Content(String::from("before "))],
+                    style: style!(fg: Red;)
+                },
+                Token::Content(String::from(" after"))
+            ]))
+        );
+        assert_eq!(parser.peek(), Some(SyntaxKind::ParenthesisClose));
+    }
+
+    #[test]
+    fn unescaped_open_square_bracket_in_token() {
+        let mut parser = Parser::new("[fg:red](before [ after)");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(17..23)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier,
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_close_square_bracket_in_token() {
+        let mut parser = Parser::new("[fg:red](before ] after)");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(16..17)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn token_empty_specifier() {
+        let mut parser = Parser::new("[]()");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..2)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn token_unclosed_specifier() {
+        let mut parser = Parser::new("[fg:red");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: None,
+                at: SyntaxKind::Eof,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::SquareBracketClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn token_unclosed_content() {
+        let mut parser = Parser::new("[fg:red](test");
+        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: None,
+                at: SyntaxKind::Eof,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
     }
 }

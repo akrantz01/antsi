@@ -15,7 +15,11 @@ pub(crate) fn content(p: &mut Parser) -> Option<Tokens> {
 #[cfg(test)]
 mod tests {
     use super::{content, Parser};
-    use crate::ast::{Token, Tokens};
+    use crate::{
+        ast::{Token, Tokens},
+        lexer::SyntaxKind,
+        parser::{ParseError, ParseErrorReason},
+    };
 
     #[test]
     fn empty() {
@@ -219,5 +223,72 @@ mod tests {
     fn escaped_whitespace() {
         let mut parser = Parser::new("(\\ \n\t\r)");
         assert_eq!(content(&mut parser), Some(Tokens::from(vec![])));
+    }
+
+    #[test]
+    fn missing_closing_parenthesis() {
+        let mut parser = Parser::new("(test");
+        assert_eq!(content(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: None,
+                at: SyntaxKind::Eof,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_open_square_bracket() {
+        let mut parser = Parser::new("([)");
+        assert_eq!(content(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(2..3)),
+                at: SyntaxKind::ParenthesisClose,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_close_square_bracket() {
+        let mut parser = Parser::new("(])");
+        assert_eq!(content(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..2)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_open_parenthesis() {
+        let mut parser = Parser::new("(()");
+        assert_eq!(content(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..2)),
+                at: SyntaxKind::ParenthesisOpen,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn unescaped_close_parenthesis() {
+        let mut parser = Parser::new("())");
+        assert_eq!(content(&mut parser), Some(Tokens::from(vec![])));
+        assert_eq!(parser.peek(), Some(SyntaxKind::ParenthesisClose));
     }
 }

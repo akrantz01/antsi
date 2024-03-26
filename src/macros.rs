@@ -65,3 +65,10 @@ macro_rules! assert_parse_snapshot {
         });
     };
 }
+
+/// Create a new [`text_size::TextRange`] for tests
+macro_rules! span {
+    ($from:literal .. $to:literal) => {
+        ::text_size::TextRange::new($from.into(), $to.into())
+    };
+}

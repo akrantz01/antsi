@@ -12,6 +12,10 @@ pub(crate) fn markup(p: &mut Parser) -> Option<Token> {
 #[cfg(test)]
 mod tests {
     use super::{markup, Parser};
+    use crate::{
+        lexer::SyntaxKind,
+        parser::{ParseError, ParseErrorReason},
+    };
 
     #[test]
     fn foreground_no_content() {
@@ -81,5 +85,79 @@ mod tests {
     #[test]
     fn nested_token_with_leading_and_trailing_content() {
         assert_parse_snapshot!(markup; "[fg:red](leading [bg:blue](inner) trailing)");
+    }
+
+    #[test]
+    fn empty_style_specifiers() {
+        let mut parser = Parser::new("[](content)");
+        assert_eq!(markup(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..2)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn missing_closing_square_bracket_on_style_specifiers() {
+        let mut parser = Parser::new("[fg:red(content)");
+        assert_eq!(markup(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(7..8)),
+                at: SyntaxKind::ParenthesisOpen,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::SquareBracketClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn missing_open_parenthesis_for_content() {
+        let mut parser = Parser::new("[fg:red]content)");
+        assert_eq!(markup(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(8..15)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisOpen])
+            }]
+        );
+    }
+
+    #[test]
+    fn missing_close_parenthesis_for_content() {
+        let mut parser = Parser::new("[fg:red](content");
+        assert_eq!(markup(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: None,
+                at: SyntaxKind::Eof,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisClose])
+            }]
+        );
+    }
+
+    #[test]
+    fn content_does_not_immediately_follow_style_specifiers() {
+        let mut parser = Parser::new("[fg:red] (content)");
+        assert_eq!(markup(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(8..9)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ParenthesisOpen])
+            }]
+        );
     }
 }

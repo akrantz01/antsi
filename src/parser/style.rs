@@ -43,7 +43,7 @@ pub(crate) fn style(p: &mut Parser) -> Option<Style> {
         first_specifier = false;
     }
 
-    p.expect(SyntaxKind::SquareBracketClose);
+    p.expect(SyntaxKind::SquareBracketClose)?;
 
     Some(style)
 }
@@ -89,6 +89,7 @@ mod tests {
     use crate::{
         ast::{Color, Decoration},
         lexer::SyntaxKind,
+        parser::{ParseError, ParseErrorReason},
     };
 
     #[test]
@@ -148,6 +149,51 @@ mod tests {
     }
 
     #[test]
+    fn color_specifier_not_starting_with_tag_returns_none() {
+        let mut parser = Parser::new("deco:blue");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(0..4)),
+                at: SyntaxKind::DecorationSpecifier,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::ForegroundSpecifier])
+            }]
+        );
+    }
+
+    #[test]
+    fn color_specifier_not_separated_by_colon_returns_none() {
+        let mut parser = Parser::new("fg;red");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(2..3)),
+                at: SyntaxKind::Semicolon,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon])
+            }]
+        );
+    }
+
+    #[test]
+    fn color_specifier_value_is_not_a_color() {
+        let mut parser = Parser::new("fg:invalid");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(3..10)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+            }]
+        );
+    }
+
+    #[test]
     fn decoration_specifier_single_decoration() {
         let mut parser = Parser::new("deco:bold");
         let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
@@ -204,6 +250,73 @@ mod tests {
     #[test]
     fn decoration_specifier_all_uppercase() {
         let mut parser = Parser::new("DECO:BOLD");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold }));
+    }
+
+    #[test]
+    fn decoration_specifier_not_starting_with_tag_returns_none() {
+        let mut parser = Parser::new("fg:bold");
+        let result = color_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(0..2)),
+                at: SyntaxKind::ForegroundSpecifier,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::DecorationSpecifier])
+            }]
+        );
+    }
+
+    #[test]
+    fn decoration_specifier_not_separated_by_colon_returns_none() {
+        let mut parser = Parser::new("deco;red");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(4..5)),
+                at: SyntaxKind::Semicolon,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon])
+            }]
+        );
+    }
+
+    #[test]
+    fn decoration_specifier_value_is_not_a_decoration() {
+        let mut parser = Parser::new("deco:invalid");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(5..12)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+            }]
+        );
+    }
+
+    #[test]
+    fn decoration_specifier_successive_value_is_not_a_decoration() {
+        let mut parser = Parser::new("deco:bold,invalid");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(10..17)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+            }]
+        );
+    }
+
+    #[test]
+    fn decoration_specifier_stops_consuming_after_non_comma() {
+        let mut parser = Parser::new("deco:bold;italic");
         let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
         assert_eq!(result, Some(set! { Decoration::Bold }));
     }
@@ -409,5 +522,167 @@ mod tests {
         let mut parser = Parser::new("[deco:italic;deco:bold]");
         let result = style(&mut parser);
         assert_eq!(result, Some(style!(deco: Bold;)));
+    }
+
+    #[test]
+    fn style_invalid_specifier_tag() {
+        let mut parser = Parser::new("[foreground:black]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..11)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier
+                ])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_foreground_specifier_value() {
+        let mut parser = Parser::new("[fg:invalid]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(4..11)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_background_specifier_value() {
+        let mut parser = Parser::new("[bg:invalid]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(4..11)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_decoration_specifier_value() {
+        let mut parser = Parser::new("[deco:invalid]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(6..13)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_key_value_pair_format() {
+        let mut parser = Parser::new("[fg]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(3..4)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon]),
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_foreground_specifier_value_when_surrounded_by_valid_specifiers() {
+        let mut parser = Parser::new("[bg:red;fg:invalid;deco:bold]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(11..18)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_background_specifier_value_when_surrounded_by_valid_specifiers() {
+        let mut parser = Parser::new("[fg:red;bg:invalid;deco:bold]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(11..18)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Color])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_decoration_specifier_value_when_surrounded_by_valid_specifiers() {
+        let mut parser = Parser::new("[fg:red;deco:invalid;bg:blue]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(13..20)),
+                at: SyntaxKind::Text,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Decoration])
+            }]
+        );
+    }
+
+    #[test]
+    fn style_invalid_key_value_pair_format_when_surrounded_by_valid_specifiers() {
+        let mut parser = Parser::new("[bg:white;fg;deco:italic,bold]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(12..13)),
+                at: SyntaxKind::Semicolon,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::Colon]),
+            }]
+        );
+    }
+
+    #[test]
+    fn style_missing_closing_square_bracket() {
+        let mut parser = Parser::new("[fg:red");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: None,
+                at: SyntaxKind::Eof,
+                reason: ParseErrorReason::Expected(vec![SyntaxKind::SquareBracketClose]),
+            }]
+        )
+    }
+
+    #[test]
+    fn style_empty_specifier_list() {
+        let mut parser = Parser::new("[]");
+        assert_eq!(style(&mut parser), None);
+        assert_eq!(
+            parser.errors,
+            vec![ParseError {
+                span: Some(span!(1..2)),
+                at: SyntaxKind::SquareBracketClose,
+                reason: ParseErrorReason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier
+                ])
+            }]
+        )
     }
 }
