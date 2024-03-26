@@ -12,24 +12,4 @@ description: "[fg:red](before \\a after)"
             'a',
         ),
     },
-    ParseError {
-        span: Some(
-            16..18,
-        ),
-        at: EscapeCharacter,
-        reason: Expected(
-            [
-                Eof,
-            ],
-        ),
-    },
-    ParseError {
-        span: Some(
-            24..25,
-        ),
-        at: ParenthesisClose,
-        reason: UnescapedControlCharacter(
-            ')',
-        ),
-    },
 ]

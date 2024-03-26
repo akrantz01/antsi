@@ -12,15 +12,4 @@ description: "before \\a after"
             'a',
         ),
     },
-    ParseError {
-        span: Some(
-            7..9,
-        ),
-        at: EscapeCharacter,
-        reason: Expected(
-            [
-                Eof,
-            ],
-        ),
-    },
 ]

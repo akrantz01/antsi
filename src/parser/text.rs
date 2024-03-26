@@ -27,13 +27,13 @@ pub(crate) fn text(p: &mut Parser) -> Option<Tokens> {
                 match character {
                     '\\' | '(' | ')' | '[' | ']' => {
                         tokens.push_char(character);
-                        p.bump();
                     }
                     _ => {
                         p.error(ParseErrorReason::UnknownEscapeSequence(character));
-                        return None;
                     }
                 }
+
+                p.bump();
             }
             Some(SyntaxKind::Eof | SyntaxKind::Unknown) => unreachable!(),
             Some(_) => {
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn invalid_escape_character() {
         let mut parser = Parser::new("\\a");
-        assert_eq!(text(&mut parser), None);
+        assert_eq!(text(&mut parser), Some(Tokens::from(vec![])));
         assert_eq!(
             parser.errors,
             vec![ParseError {
@@ -540,7 +540,13 @@ mod tests {
     #[test]
     fn token_invalid_escape_character() {
         let mut parser = Parser::new("[fg:red](\\a)");
-        assert_eq!(text(&mut parser), None);
+        assert_eq!(
+            text(&mut parser),
+            Some(Tokens::from(vec![Token::Styled {
+                style: style!(fg: Red;),
+                content: vec![]
+            }]))
+        );
         assert_eq!(
             parser.errors,
             vec![ParseError {
