@@ -2,6 +2,7 @@
 name = "antsi"
 version = "0.1.0"
 edition = "2021"
+description = "A quick and user-friendly way to style your text using ANSI codes"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
