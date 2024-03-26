@@ -9,7 +9,7 @@ name = "antsi"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.20.0"
+pyo3 = "0.21"
 indexmap = "2.2"
 logos = "0.14"
 text-size = "1.1"
