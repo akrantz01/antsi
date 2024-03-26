@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+#[cfg(test)]
 #[macro_use]
 mod macros;
 mod ast;
