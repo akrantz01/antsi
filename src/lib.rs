@@ -5,7 +5,6 @@ mod macros;
 mod ast;
 mod lexer;
 mod parser;
-mod tokens;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
