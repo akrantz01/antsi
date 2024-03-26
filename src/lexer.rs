@@ -96,9 +96,10 @@ pub(crate) enum SyntaxKind {
     Eof,
 }
 
-impl Display for SyntaxKind {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
+impl SyntaxKind {
+    /// Get the name of the lexeme
+    pub fn name(&self) -> &'static str {
+        match self {
             Self::SquareBracketOpen => "[",
             Self::SquareBracketClose => "]",
             Self::ParenthesisOpen => "(",
@@ -116,7 +117,13 @@ impl Display for SyntaxKind {
             Self::Text => "text",
             Self::Unknown => "unknown",
             Self::Eof => "end of file",
-        })
+        }
+    }
+}
+
+impl Display for SyntaxKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.name())
     }
 }
 
