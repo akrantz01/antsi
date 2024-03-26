@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 #[macro_use]
 mod macros;
 mod ast;
+mod color;
 mod lexer;
 mod parser;
 
