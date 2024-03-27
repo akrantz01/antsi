@@ -1,4 +1,4 @@
-use pyo3::prelude::*;
+use pyo3::{create_exception, exceptions::PyException, prelude::*};
 
 #[cfg(test)]
 #[macro_use]
@@ -8,6 +8,26 @@ mod color;
 mod error;
 mod lexer;
 mod parser;
+
+use color::colorize;
+use error::ErrorReport;
+
+create_exception!(
+    antsi,
+    ColorizeError,
+    PyException,
+    "A report of all the issues found when applying styling to a piece of text"
+);
+
+impl ColorizeError {
+    /// Create a new error from a report
+    fn from_report(report: ErrorReport, source: &str, file: &str) -> PyErr {
+        match report.emit(file, source, false) {
+            Ok(formatted) => Self::new_err(formatted),
+            Err(e) => PyErr::from(e),
+        }
+    }
+}
 
 /// Convert styled markup to ANSI escape codes.
 ///
@@ -76,14 +96,17 @@ mod parser;
 /// - When nesting styled markup, styles of the parent will be applied unless overridden
 /// - There is currently no way to remove text decorations from the children of nested markup
 #[pyfunction]
-fn colorize(source: &str) -> PyResult<String> {
-    Ok(color::colorize(source).unwrap())
+#[pyo3(name = "colorize")]
+#[pyo3(signature = (source, file="inline"))]
+fn py_colorize(source: &str, file: &str) -> PyResult<String> {
+    colorize(source).map_err(|errors| ColorizeError::from_report(errors.into(), source, file))
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_antsi")]
 fn antsi(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(colorize, m)?)?;
+    m.add("ColorizeError", m.py().get_type_bound::<ColorizeError>())?;
+    m.add_function(wrap_pyfunction!(py_colorize, m)?)?;
     Ok(())
 }
