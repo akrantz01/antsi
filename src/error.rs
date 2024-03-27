@@ -85,7 +85,7 @@ impl Error {
             Reason::Expected(tokens) => Diagnostic::error()
                 .with_message("unexpected token encountered")
                 .with_labels(vec![
-                    Label::primary(file, span).with_message(format!("found a {}", self.at)),
+                    Label::primary(file, span).with_message(format!("found {} token", self.at)),
                     Label::secondary(file, span).with_message({
                         let comma_separated = tokens.iter().map(SyntaxKind::name).enumerate().fold(
                             String::new(),
@@ -108,7 +108,7 @@ impl Error {
                 .with_notes(vec![String::from(
                     "valid escape sequences are: `\\\\`, `\\[`, `\\]`, `\\(`, `\\)`",
                 )]),
-            Reason::UnescapedControlCharacter(character) => Diagnostic::warning()
+            Reason::UnescapedControlCharacter(character) => Diagnostic::error()
                 .with_message("unescaped control character")
                 .with_labels(vec![
                     Label::primary(file, span).with_message(format!(
