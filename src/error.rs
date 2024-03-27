@@ -6,7 +6,7 @@ use codespan_reporting::{
 };
 use std::io;
 use termcolor::{Buffer, WriteColor};
-use text_size::TextRange;
+use text_size::{TextLen, TextRange};
 
 /// A report of all the issues found with a piece of text
 #[derive(Clone, Debug)]
@@ -42,10 +42,18 @@ impl ErrorReport {
         let file = SimpleFile::new(file, source);
         let config = Config::default();
 
+        let eof = {
+            let length = source.text_len();
+            TextRange::new(length, length)
+        };
+
         for error in self.errors() {
-            if let Err(err) =
-                codespan_reporting::term::emit(output, &config, &file, &error.to_diagnostic(()))
-            {
+            if let Err(err) = codespan_reporting::term::emit(
+                output,
+                &config,
+                &file,
+                &error.to_diagnostic((), eof),
+            ) {
                 match err {
                     CodespanError::Io(e) => return Err(e),
                     _ => panic!("reporting failed: {err:?}"),
@@ -68,17 +76,17 @@ pub struct Error {
 
 impl Error {
     /// Convert the error into a user-friendly diagnostic
-    pub fn to_diagnostic<FileId>(&self, file: FileId) -> Diagnostic<FileId>
+    pub fn to_diagnostic<FileId>(&self, file: FileId, eof: TextRange) -> Diagnostic<FileId>
     where
         FileId: Copy,
     {
+        let span = self.span.unwrap_or(eof);
         match &self.reason {
             Reason::Expected(tokens) => Diagnostic::error()
                 .with_message("unexpected token encountered")
                 .with_labels(vec![
-                    Label::primary(file, self.span.unwrap())
-                        .with_message(format!("found a {}", self.at)),
-                    Label::secondary(file, self.span.unwrap()).with_message({
+                    Label::primary(file, span).with_message(format!("found a {}", self.at)),
+                    Label::secondary(file, span).with_message({
                         let comma_separated = tokens.iter().map(SyntaxKind::name).enumerate().fold(
                             String::new(),
                             |mut acc, (i, name)| {
@@ -95,7 +103,7 @@ impl Error {
                 ]),
             Reason::UnknownEscapeSequence(character) => Diagnostic::error()
                 .with_message("unknown escape sequence")
-                .with_labels(vec![Label::primary(file, self.span.unwrap())
+                .with_labels(vec![Label::primary(file, span)
                     .with_message(format!("unknown escaped character `{character}`"))])
                 .with_notes(vec![String::from(
                     "valid escape sequences are: `\\\\`, `\\[`, `\\]`, `\\(`, `\\)`",
@@ -103,10 +111,10 @@ impl Error {
             Reason::UnescapedControlCharacter(character) => Diagnostic::warning()
                 .with_message("unescaped control character")
                 .with_labels(vec![
-                    Label::primary(file, self.span.unwrap()).with_message(format!(
+                    Label::primary(file, span).with_message(format!(
                         "found an unescaped `{character}` that needs to be escaped"
                     )),
-                    Label::secondary(file, self.span.unwrap())
+                    Label::secondary(file, span)
                         .with_message(format!("use `\\{character}` to escape it")),
                 ]),
         }
