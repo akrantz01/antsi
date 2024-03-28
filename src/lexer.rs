@@ -137,7 +137,6 @@ pub(crate) struct Lexeme<'source> {
 #[cfg(test)]
 mod tests {
     use super::{Lexer, SyntaxKind};
-    use crate::ast::{Color, Decoration};
     use text_size::TextSize;
 
     fn check(input: &str, kind: SyntaxKind) {

@@ -32,7 +32,7 @@ impl<'source> Parser<'source> {
             tokens.extend(text::text(&mut self).unwrap_or_default());
 
             if let Some(lexeme) = self.peek() {
-                match dbg!(lexeme) {
+                match lexeme {
                     SyntaxKind::ParenthesisOpen => {
                         self.error(Reason::UnescapedControlCharacter('('))
                     }
@@ -77,16 +77,6 @@ impl<'source> Parser<'source> {
         self.peek() == Some(kind)
     }
 
-    /// Check if the parser is currently at one of the given syntax items
-    pub(crate) fn at_one_of(&mut self, set: &[SyntaxKind]) -> bool {
-        self.peek().map_or(false, |k| set.contains(&k))
-    }
-
-    /// Check if we're at the end of the token stream
-    pub(crate) fn at_end(&mut self) -> bool {
-        self.peek().is_none()
-    }
-
     /// Expect a syntax item, emitting an error if it isn't present
     pub(crate) fn expect(&mut self, kind: SyntaxKind) -> Option<Lexeme> {
         if self.at(kind) {
@@ -110,7 +100,6 @@ impl<'source> Parser<'source> {
 
 #[cfg(test)]
 mod tests {
-    use super::Parser;
     use crate::ast::Token;
 
     macro_rules! with_source {
