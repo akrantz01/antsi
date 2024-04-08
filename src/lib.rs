@@ -6,11 +6,13 @@ mod macros;
 mod ast;
 mod color;
 mod error;
+mod escape;
 mod lexer;
 mod parser;
 
 use color::colorize;
 use error::ErrorReport;
+use escape::escape;
 
 create_exception!(
     antsi,
@@ -102,11 +104,19 @@ fn py_colorize(source: &str, file: &str) -> PyResult<String> {
     colorize(source).map_err(|errors| ColorizeError::from_report(errors.into(), source, file))
 }
 
+/// Escape all styled markup in a piece of text
+#[pyfunction]
+#[pyo3(name = "escape")]
+fn py_escape(source: &str) -> String {
+    escape(source)
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_antsi")]
 fn antsi(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("ColorizeError", m.py().get_type_bound::<ColorizeError>())?;
     m.add_function(wrap_pyfunction!(py_colorize, m)?)?;
+    m.add_function(wrap_pyfunction!(py_escape, m)?)?;
     Ok(())
 }

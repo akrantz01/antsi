@@ -7,4 +7,4 @@ code conversion, handling of overlapping styles, and terminal support is automat
 
 from ._antsi import *
 
-__all__ = ["ColorizeError", "colorize"]
+__all__ = ["ColorizeError", "colorize", "escape"]
