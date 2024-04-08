@@ -32,3 +32,6 @@ distribution = true
 dev = [
     "mypy>=1.9.0",
 ]
+
+[tool.pdm.scripts]
+stubtest = "stubtest antsi"
