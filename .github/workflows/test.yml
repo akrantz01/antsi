@@ -1,0 +1,27 @@
+---
+name: Test
+
+on:  # yamllint disable-line rule:truthy
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - run: cargo test
+
+  type-stubs:
+    name: Type Stubs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: pip install mypy
+      - run: stubtest antsi
