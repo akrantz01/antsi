@@ -21,6 +21,10 @@ dynamic = ["version"]
 
 dependencies = []
 
+[project.urls]
+homepage = "https://github.com/akrantz01/antsi"
+issues = "https://github.com/akrantz01/antsi/issues"
+
 [tool.maturin]
 module-name = "antsi._antsi"
 features = ["pyo3/extension-module"]
