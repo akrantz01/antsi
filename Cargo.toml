@@ -10,7 +10,7 @@ name = "antsi"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.21"
+pyo3 = { version = "0.21", features = ["extension-module", "abi3-py310"] }
 indexmap = "2.2"
 logos = "0.14"
 text-size = "1.1"
