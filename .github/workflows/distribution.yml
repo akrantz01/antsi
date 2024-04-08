@@ -3,9 +3,10 @@
 #
 #    maturin generate-ci github
 #
+---
 name: Distribution
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
