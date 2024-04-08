@@ -4,7 +4,14 @@ build-backend = "maturin"
 
 [project]
 name = "antsi"
-requires-python = ">=3.8"
+description = "A quick and user-friendly way to style your text using ANSI codes"
+authors = [
+    { name = "Alex Krantz", email = "alex@krantz.dev" },
+]
+readme = "README.md"
+license = { text = "MIT" }
+
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -12,6 +19,16 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+dependencies = []
+
 [tool.maturin]
 module-name = "antsi._antsi"
 features = ["pyo3/extension-module"]
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "mypy>=1.9.0",
+]

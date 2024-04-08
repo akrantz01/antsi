@@ -5,6 +5,6 @@ Built around a delightfully simple markup language, there's no messing about wit
 code conversion, handling of overlapping styles, and terminal support is automatically handled for you.
 """
 
-from ._antsi import *
+from ._antsi import ColorizeError, colorize, escape
 
 __all__ = ["ColorizeError", "colorize", "escape"]
