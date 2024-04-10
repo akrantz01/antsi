@@ -113,9 +113,11 @@ jobs:
       - id: determine
         run: >-
           current_version=$(tomlq -r .package.version Cargo.toml)
-          new_version=$(gh api repos/:owner/:repo/git/refs/tags
-            | jq --arg current_version $current_version
-              '[ .[].ref | ltrimstr("refs/tags/v") ] | contains([$current_version])')
+          new_version=$( \
+            gh api repos/:owner/:repo/git/refs/tags \
+            | jq --arg current_version $current_version \
+              '[ .[].ref | ltrimstr("refs/tags/v") ] | contains([$current_version]) | not' \
+          )
           echo "result=$new_version" >> "$GITHUB_OUTPUT"
 
   publish:
