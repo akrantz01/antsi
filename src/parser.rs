@@ -87,6 +87,13 @@ impl<'source> Parser<'source> {
         }
     }
 
+    /// Consume lexemes until a non-whitespace lexeme is reached
+    pub(crate) fn consume_whitespace(&mut self) {
+        while let Some(SyntaxKind::Whitespace) = self.peek() {
+            self.bump();
+        }
+    }
+
     /// Report an error during parsing
     pub(crate) fn error(&mut self, reason: Reason) {
         let (span, at) = match self.peek_lexeme() {
@@ -352,7 +359,7 @@ mod tests {
     #[test]
     fn parse_unescaped_open_square_bracket_in_plaintext() {
         with_source!("before [ after", |result, errors| {
-            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_eq!(result, vec![]);
             assert_snapshot!({ snapshot_suffix => "errors" }, errors);
         });
     }
@@ -384,7 +391,7 @@ mod tests {
     #[test]
     fn parse_unescaped_open_square_bracket_in_token() {
         with_source!("[fg:red](before [ after)", |result, errors| {
-            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_eq!(result, vec![]);
             assert_snapshot!({ snapshot_suffix => "errors" }, errors);
         });
     }

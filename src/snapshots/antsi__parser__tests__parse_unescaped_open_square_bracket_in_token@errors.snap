@@ -5,9 +5,9 @@ description: "[fg:red](before [ after)"
 [
     Error {
         span: Some(
-            17..18,
+            18..23,
         ),
-        at: Whitespace,
+        at: Text,
         reason: Expected(
             [
                 ForegroundSpecifier,
@@ -18,9 +18,9 @@ description: "[fg:red](before [ after)"
     },
     Error {
         span: Some(
-            17..18,
+            18..23,
         ),
-        at: Whitespace,
+        at: Text,
         reason: Expected(
             [
                 Eof,

@@ -394,8 +394,8 @@ mod tests {
         assert_eq!(
             parser.errors,
             vec![Error {
-                span: Some(span!(8..9)),
-                at: SyntaxKind::Whitespace,
+                span: Some(span!(9..14)),
+                at: SyntaxKind::Text,
                 reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,
@@ -452,8 +452,8 @@ mod tests {
         assert_eq!(
             parser.errors,
             vec![Error {
-                span: Some(span!(17..18)),
-                at: SyntaxKind::Whitespace,
+                span: Some(span!(18..23)),
+                at: SyntaxKind::Text,
                 reason: Reason::Expected(vec![
                     SyntaxKind::ForegroundSpecifier,
                     SyntaxKind::BackgroundSpecifier,

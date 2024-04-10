@@ -14,31 +14,39 @@ pub(crate) fn style(p: &mut Parser) -> Option<Style> {
     let mut first_specifier = true;
 
     loop {
+        p.consume_whitespace();
+
         if !first_specifier {
             if p.at(SyntaxKind::Semicolon) {
                 p.bump();
+                p.consume_whitespace();
             } else {
                 break;
             }
         }
 
-        if p.at(SyntaxKind::ForegroundSpecifier) {
-            let color = color_specifier(p, SyntaxKind::ForegroundSpecifier)?;
-            style.foreground = Some(color);
-        } else if p.at(SyntaxKind::BackgroundSpecifier) {
-            let color = color_specifier(p, SyntaxKind::BackgroundSpecifier)?;
-            style.background = Some(color);
-        } else if p.at(SyntaxKind::DecorationSpecifier) {
-            let decorations = decorations_specifier(p, SyntaxKind::DecorationSpecifier)?;
-            style.decoration = Some(decorations);
-        } else {
-            p.error(Reason::Expected(vec![
-                SyntaxKind::ForegroundSpecifier,
-                SyntaxKind::BackgroundSpecifier,
-                SyntaxKind::DecorationSpecifier,
-            ]));
-            return None;
-        };
+        match p.peek() {
+            Some(SyntaxKind::ForegroundSpecifier) => {
+                let color = color_specifier(p, SyntaxKind::ForegroundSpecifier)?;
+                style.foreground = Some(color);
+            }
+            Some(SyntaxKind::BackgroundSpecifier) => {
+                let color = color_specifier(p, SyntaxKind::BackgroundSpecifier)?;
+                style.background = Some(color);
+            }
+            Some(SyntaxKind::DecorationSpecifier) => {
+                let decorations = decorations_specifier(p, SyntaxKind::DecorationSpecifier)?;
+                style.decoration = Some(decorations);
+            }
+            _ => {
+                p.error(Reason::Expected(vec![
+                    SyntaxKind::ForegroundSpecifier,
+                    SyntaxKind::BackgroundSpecifier,
+                    SyntaxKind::DecorationSpecifier,
+                ]));
+                return None;
+            }
+        }
 
         first_specifier = false;
     }
@@ -51,7 +59,10 @@ pub(crate) fn style(p: &mut Parser) -> Option<Style> {
 /// Parse a specifier with a [`Color`] value
 fn color_specifier(p: &mut Parser, tag: SyntaxKind) -> Option<Color> {
     p.expect(tag)?;
+    p.consume_whitespace();
+
     p.expect(SyntaxKind::Colon)?;
+    p.consume_whitespace();
 
     let token = p.expect(SyntaxKind::Color)?;
     Some(Color::from_str(token.text).expect("invalid color"))
@@ -60,15 +71,21 @@ fn color_specifier(p: &mut Parser, tag: SyntaxKind) -> Option<Color> {
 /// Parse a specifier with a [`Decoration`]s value
 fn decorations_specifier(p: &mut Parser, tag: SyntaxKind) -> Option<IndexSet<Decoration>> {
     p.expect(tag)?;
+    p.consume_whitespace();
+
     p.expect(SyntaxKind::Colon)?;
+    p.consume_whitespace();
 
     let mut decorations = IndexSet::with_capacity(1);
     let mut first_decoration = true;
 
     loop {
+        p.consume_whitespace();
+
         if !first_decoration {
             if p.at(SyntaxKind::Comma) {
                 p.bump();
+                p.consume_whitespace();
             } else {
                 break;
             }
@@ -191,6 +208,31 @@ mod tests {
                 reason: Reason::Expected(vec![SyntaxKind::Color])
             }]
         );
+    }
+
+    #[test]
+    fn color_specifier_whitespace_before_colon() {
+        let mut parser = Parser::new("fg :red");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, Some(Color::Red));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn color_specifier_whitespace_after_colon() {
+        let mut parser = Parser::new("fg: red");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, Some(Color::Red));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn color_specifier_trailing_whitespace() {
+        let mut parser = Parser::new("fg:red ");
+        let result = color_specifier(&mut parser, SyntaxKind::ForegroundSpecifier);
+        assert_eq!(result, Some(Color::Red));
+        assert!(parser.errors.is_empty());
+        assert!(parser.at(SyntaxKind::Whitespace));
     }
 
     #[test]
@@ -319,6 +361,46 @@ mod tests {
         let mut parser = Parser::new("deco:bold;italic");
         let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
         assert_eq!(result, Some(set! { Decoration::Bold }));
+    }
+
+    #[test]
+    fn decoration_specifier_whitespace_before_colon() {
+        let mut parser = Parser::new("deco :bold");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold }));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn decoration_specifier_whitespace_after_colon() {
+        let mut parser = Parser::new("deco: bold");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold }));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn decoration_specifier_trailing_whitespace() {
+        let mut parser = Parser::new("deco:bold ");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold }));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn decoration_specifier_whitespace_before_comma() {
+        let mut parser = Parser::new("deco:bold ,italic");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold, Decoration::Italic }));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn decoration_specifier_whitespace_after_comma() {
+        let mut parser = Parser::new("deco:bold, italic");
+        let result = decorations_specifier(&mut parser, SyntaxKind::DecorationSpecifier);
+        assert_eq!(result, Some(set! { Decoration::Bold, Decoration::Italic }));
+        assert!(parser.errors.is_empty());
     }
 
     #[test]
@@ -684,5 +766,75 @@ mod tests {
                 ])
             }]
         )
+    }
+
+    #[test]
+    fn style_whitespace_before_foreground_specifier() {
+        let mut parser = Parser::new("[ fg:red]");
+        assert_eq!(style(&mut parser), Some(style!(fg: Red;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_before_background_specifier() {
+        let mut parser = Parser::new("[ bg:blue]");
+        assert_eq!(style(&mut parser), Some(style!(bg: Blue;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_before_decoration_specifier_with_single() {
+        let mut parser = Parser::new("[ deco:bold]");
+        assert_eq!(style(&mut parser), Some(style!(deco: Bold;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_before_decoration_specifier_with_multiple() {
+        let mut parser = Parser::new("[ deco:bold,italic]");
+        assert_eq!(style(&mut parser), Some(style!(deco: Bold, Italic;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_after_foreground_specifier() {
+        let mut parser = Parser::new("[fg:red ]");
+        assert_eq!(style(&mut parser), Some(style!(fg: Red;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_after_background_specifier() {
+        let mut parser = Parser::new("[bg:blue ]");
+        assert_eq!(style(&mut parser), Some(style!(bg: Blue;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_after_decoration_specifier_with_single() {
+        let mut parser = Parser::new("[deco:bold ]");
+        assert_eq!(style(&mut parser), Some(style!(deco: Bold;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_after_decoration_specifier_with_multiple() {
+        let mut parser = Parser::new("[deco:bold,italic ]");
+        assert_eq!(style(&mut parser), Some(style!(deco: Bold, Italic;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_before_semicolon() {
+        let mut parser = Parser::new("[fg:red ;bg:blue]");
+        assert_eq!(style(&mut parser), Some(style!(fg: Red; bg: Blue;)));
+        assert!(parser.errors.is_empty());
+    }
+
+    #[test]
+    fn style_whitespace_after_semicolon() {
+        let mut parser = Parser::new("[fg:red; bg:blue]");
+        assert_eq!(style(&mut parser), Some(style!(fg: Red; bg: Blue;)));
+        assert!(parser.errors.is_empty());
     }
 }

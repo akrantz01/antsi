@@ -5,9 +5,9 @@ description: "before [ after"
 [
     Error {
         span: Some(
-            8..9,
+            9..14,
         ),
-        at: Whitespace,
+        at: Text,
         reason: Expected(
             [
                 ForegroundSpecifier,
@@ -18,9 +18,9 @@ description: "before [ after"
     },
     Error {
         span: Some(
-            8..9,
+            9..14,
         ),
-        at: Whitespace,
+        at: Text,
         reason: Expected(
             [
                 Eof,
