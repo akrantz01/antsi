@@ -110,8 +110,11 @@ jobs:
       - name: Install yq
         run: pipx install yq
 
-      - id: determine
-        run: >-
+      - name: Compare current version to released tags
+        id: determine
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           current_version=$(tomlq -r .package.version Cargo.toml)
           new_version=$( \
             gh api repos/:owner/:repo/git/refs/tags \
