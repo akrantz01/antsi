@@ -168,6 +168,10 @@ Any and all contributions are welcome! Some ideas if you can't think of anything
 If you don't have time to contribute yourself but still wish to support the project, [sponsorship][sponsorship] would be
 greatly appreciated!
 
+## License
+
+Licensed under the [MIT license](LICENSE.md) (or <http://opensource.org/licenses/MIT>).
+
 [latest-release]: https://github.com/akrantz01/antsi/releases
 [pypi]: https://pypi.org/p/antsi
 [sponsorship]: https://github.com/sponsors/akrantz01
