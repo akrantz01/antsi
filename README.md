@@ -47,13 +47,13 @@ default text color.
 
 ### Content
 
-The content following a style specifier must always be wrapped in parentheses and is whitespace sensitive. Any
-whitespace within the content will be emitted as-is unless [escaped](#escape-sequences) using a backslash
-(<code>&bsol;</code>).
+The content is what the style specifier applies to. It always immediately follows a style specifier and must be wrapped
+in parentheses. Any whitespace within the content will be emitted as-is unless [escaped](#escape-sequences) using a
+backslash (<code>&bsol;</code>).
 
 > [!IMPORTANT]
 >
-> Putting any character between the style specifier and content is explicitly disallowed.
+> Putting any character(s) between the style specifier and content is explicitly disallowed.
 
 The content can contain any characters, and it can even contain other styled markup! If you want to use any square
 brackets or parentheses in the content, they must be [escaped](#escape-sequences).
@@ -67,6 +67,10 @@ brackets or parentheses in the content, they must be [escaped](#escape-sequences
 
 Style specifiers are surrounded by square brackets (`[]`) and contain the directives for applying style to the content
 immediately following them. They are essentially a list of key-value pairs, where the key denotes the type of style.
+
+The styles within a specifier will ignore whitespace to facilitate readability. However, whitespace cannot exist in the
+middle of a key or value (i.e. `bl ue` will cause an error). The benefit of this is that `[ fg: red ; bg: blue ]`
+will be parsed the same as `[fg:red;bg:blue]`, so use whatever style you prefer.
 
 Examples:
 
@@ -173,5 +177,7 @@ greatly appreciated!
 Licensed under the [MIT license](LICENSE.md) (or <http://opensource.org/licenses/MIT>).
 
 [latest-release]: https://github.com/akrantz01/antsi/releases
+
 [pypi]: https://pypi.org/p/antsi
+
 [sponsorship]: https://github.com/sponsors/akrantz01
