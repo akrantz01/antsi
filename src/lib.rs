@@ -1,4 +1,6 @@
+use pyo3::exceptions::PyTypeError;
 use pyo3::{create_exception, exceptions::PyException, prelude::*};
+use textwrap::Options;
 
 #[cfg(test)]
 #[macro_use]
@@ -36,6 +38,9 @@ impl ColorizeError {
 /// Converts styled markup within the source text to ANSI escape codes allowing text to be formatted
 /// on the command line. If a string has no styled markup, it will be passed through unchanged. Any
 /// invalid/unparseable markup will cause an exception.
+///
+/// Text wrapping is also supported when the `wrap` parameter is passed with the desired width. The
+/// wrap width must be greater than zero.
 ///
 /// Styled markup is defined as follows:
 /// ```text
@@ -99,9 +104,19 @@ impl ColorizeError {
 /// - There is currently no way to remove text decorations from the children of nested markup
 #[pyfunction]
 #[pyo3(name = "colorize")]
-#[pyo3(signature = (source, file="inline"))]
-fn py_colorize(source: &str, file: &str) -> PyResult<String> {
-    colorize(source).map_err(|errors| ColorizeError::from_report(errors.into(), source, file))
+#[pyo3(signature = (source, file="inline", wrap=None))]
+fn py_colorize(source: &str, file: &str, wrap: Option<usize>) -> PyResult<String> {
+    if let Some(0) = wrap {
+        return Err(PyTypeError::new_err("wrap width must be greater than 0"));
+    }
+
+    let styled = colorize(source)
+        .map_err(|errors| ColorizeError::from_report(errors.into(), source, file))?;
+
+    Ok(match wrap {
+        Some(width) => textwrap::fill(&styled, Options::new(width)),
+        None => styled,
+    })
 }
 
 /// Escape all styled markup in a piece of text
