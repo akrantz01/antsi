@@ -127,7 +127,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && needs.should-publish.outputs.result }}
+    if: ${{ github.event_name != 'pull_request' && fromJSON(needs.should-publish.outputs.result) }}
     needs: [ should-publish, linux, windows, macos, sdist ]
     environment:
       name: pypi
@@ -145,7 +145,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && needs.should-publish.outputs.result }}
     needs: [ publish ]
     permissions:
       contents: write
