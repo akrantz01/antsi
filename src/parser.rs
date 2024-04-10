@@ -352,8 +352,8 @@ mod tests {
     #[test]
     fn parse_unescaped_open_square_bracket_in_plaintext() {
         with_source!("before [ after", |result, errors| {
-            assert_eq!(result, vec![]);
-            assert_snapshot!(errors);
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
         });
     }
 
@@ -384,8 +384,8 @@ mod tests {
     #[test]
     fn parse_unescaped_open_square_bracket_in_token() {
         with_source!("[fg:red](before [ after)", |result, errors| {
-            assert_eq!(result, vec![]);
-            assert_snapshot!(errors);
+            assert_snapshot!({ snapshot_suffix => "result" }, result);
+            assert_snapshot!({ snapshot_suffix => "errors" }, errors);
         });
     }
 

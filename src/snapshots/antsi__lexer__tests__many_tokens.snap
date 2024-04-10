@@ -5,8 +5,13 @@ expression: tokens
 [
     Lexeme {
         kind: Text,
-        text: "leading ",
-        span: 0..8,
+        text: "leading",
+        span: 0..7,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: " ",
+        span: 7..8,
     },
     Lexeme {
         kind: SquareBracketOpen,
@@ -40,8 +45,18 @@ expression: tokens
     },
     Lexeme {
         kind: Text,
-        text: "styled one",
-        span: 17..27,
+        text: "styled",
+        span: 17..23,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: " ",
+        span: 23..24,
+    },
+    Lexeme {
+        kind: Text,
+        text: "one",
+        span: 24..27,
     },
     Lexeme {
         kind: ParenthesisClose,
@@ -49,7 +64,7 @@ expression: tokens
         span: 27..28,
     },
     Lexeme {
-        kind: Text,
+        kind: Whitespace,
         text: " ",
         span: 28..29,
     },
@@ -69,7 +84,7 @@ expression: tokens
         span: 37..39,
     },
     Lexeme {
-        kind: Text,
+        kind: Whitespace,
         text: " ",
         span: 39..40,
     },
@@ -135,8 +150,18 @@ expression: tokens
     },
     Lexeme {
         kind: Text,
-        text: "styled two",
-        span: 67..77,
+        text: "styled",
+        span: 67..73,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: " ",
+        span: 73..74,
+    },
+    Lexeme {
+        kind: Text,
+        text: "two",
+        span: 74..77,
     },
     Lexeme {
         kind: ParenthesisClose,
@@ -144,7 +169,7 @@ expression: tokens
         span: 77..78,
     },
     Lexeme {
-        kind: Text,
+        kind: Whitespace,
         text: " ",
         span: 78..79,
     },

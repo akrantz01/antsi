@@ -1,0 +1,41 @@
+---
+source: src/lexer.rs
+expression: tokens
+---
+[
+    Lexeme {
+        kind: Whitespace,
+        text: " ",
+        span: 0..1,
+    },
+    Lexeme {
+        kind: Text,
+        text: "a",
+        span: 1..2,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: "\n\t",
+        span: 2..4,
+    },
+    Lexeme {
+        kind: Text,
+        text: "bcd5",
+        span: 4..8,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: "\r\n ",
+        span: 8..11,
+    },
+    Lexeme {
+        kind: Text,
+        text: "test",
+        span: 11..15,
+    },
+    Lexeme {
+        kind: Whitespace,
+        text: " ",
+        span: 15..16,
+    },
+]

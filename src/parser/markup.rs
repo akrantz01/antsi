@@ -155,7 +155,7 @@ mod tests {
             parser.errors,
             vec![Error {
                 span: Some(span!(8..9)),
-                at: SyntaxKind::Text,
+                at: SyntaxKind::Whitespace,
                 reason: Reason::Expected(vec![SyntaxKind::ParenthesisOpen])
             }]
         );

@@ -87,9 +87,12 @@ pub(crate) enum SyntaxKind {
     #[regex(r#"\\[ \r\n\t]+"#)]
     EscapeWhitespace,
 
+    #[regex(r#"[ \r\n\t]+"#, priority = 3)]
+    Whitespace,
+
     // as a temporary fix until https://github.com/maciejhirsz/logos/issues/265 is resolved, the
     // tokens `:` `;` and `,` are considered stop characters for words
-    #[regex(r#"[^\\\[\]():;,]+"#, priority = 2)]
+    #[regex(r#"[^\\\[\]() \r\n\t:;,]+"#, priority = 2)]
     Text,
 
     Unknown,
@@ -114,6 +117,7 @@ impl SyntaxKind {
             Self::Decoration => "decoration",
             Self::EscapeCharacter => "escape character",
             Self::EscapeWhitespace => "escape whitespace",
+            Self::Whitespace => "whitespace",
             Self::Text => "text",
             Self::Unknown => "unknown",
             Self::Eof => "end of file",
@@ -146,6 +150,8 @@ mod tests {
         assert_eq!(token.kind, kind);
         assert_eq!(token.text, input);
         assert_ne!(token.span.len(), TextSize::new(0));
+
+        assert!(lexer.next().is_none());
     }
 
     #[test]
@@ -184,12 +190,12 @@ mod tests {
     }
 
     #[test]
-    fn lowerascii_case_alphabetic_text() {
+    fn lower_ascii_case_alphabetic_text() {
         check("abcdefghijklmnopqrstuvwxyz", SyntaxKind::Text);
     }
 
     #[test]
-    fn upperascii_case_alphabetic_text() {
+    fn upper_ascii_case_alphabetic_text() {
         check("ABCDEFGHIJKLMNOPQRSTUVWXYZ", SyntaxKind::Text);
     }
 
@@ -227,8 +233,8 @@ mod tests {
     }
 
     #[test]
-    fn whitespace_text() {
-        check("  \n\t", SyntaxKind::Text);
+    fn whitespace() {
+        check("  \n\t", SyntaxKind::Whitespace);
     }
 
     #[test]
@@ -490,6 +496,13 @@ mod tests {
     #[test]
     fn multiple_decoration_style_specifiers() {
         let tokens = Lexer::new("deco:bold,italic").collect::<Vec<_>>();
+        insta::assert_debug_snapshot!(tokens);
+    }
+
+    #[test]
+    fn mixed_whitespace_and_text() {
+        let tokens = Lexer::new(" a\n\tbcd5\r\n test ").collect::<Vec<_>>();
+        assert_eq!(tokens.len(), 7);
         insta::assert_debug_snapshot!(tokens);
     }
 
