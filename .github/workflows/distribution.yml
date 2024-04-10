@@ -155,7 +155,7 @@ jobs:
           path: artifacts/
 
       - name: Relocate distribution files
-        run: >-
+        run: |
           mkdir ./dist
           mv ./artifacts/*/*
 
