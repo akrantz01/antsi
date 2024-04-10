@@ -116,12 +116,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           current_version=$(tomlq -r .package.version Cargo.toml)
-          new_version=$( \
+          will_publish=$( \
             gh api repos/:owner/:repo/git/refs/tags \
             | jq --arg current_version $current_version \
               '[ .[].ref | ltrimstr("refs/tags/v") ] | contains([$current_version]) | not' \
           )
-          echo "result=$new_version" >> "$GITHUB_OUTPUT"
+          echo "result=$will_publish" >> "$GITHUB_OUTPUT"
+          echo "Will publish? $will_publish"
 
   publish:
     name: Publish
@@ -157,7 +158,7 @@ jobs:
       - name: Relocate distribution files
         run: |
           mkdir ./dist
-          mv ./artifacts/*/*
+          mv ./artifacts/*/* ./dist
 
       - uses: sigstore/gh-action-sigstore-python@v2.1.1
         with:
