@@ -132,7 +132,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: dist/
+          path: artifacts/
+
+      - name: Relocate distribution files
+        run: >-
+          mkdir ./dist
+          mv ./artifacts/*/*
 
       - uses: sigstore/gh-action-sigstore-python@v2.1.1
         with:
