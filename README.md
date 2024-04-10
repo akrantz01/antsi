@@ -157,5 +157,17 @@ text outside styled markup.
 Beyond these characters, you can also escape any whitespace (i.e. spaces, tabs, newlines, and carriage returns) to make
 writing multi-line text easier. All you need to do is prefix it with a backslash (<code>&bsol;</code>).
 
+## Contributing
+
+Any and all contributions are welcome! Some ideas if you can't think of anything:
+
+- Improve the documentation
+- Add some functionality that might be missing
+- Report (or even fix) any bugs
+
+If you don't have time to contribute yourself but still wish to support the project, [sponsorship][sponsorship] would be
+greatly appreciated!
+
 [latest-release]: https://github.com/akrantz01/antsi/releases
 [pypi]: https://pypi.org/p/antsi
+[sponsorship]: https://github.com/sponsors/akrantz01
