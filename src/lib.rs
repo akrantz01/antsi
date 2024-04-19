@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyTypeError;
 use pyo3::{create_exception, exceptions::PyException, prelude::*};
-use textwrap::Options;
+use textwrap::Options as WrapOptions;
 
 #[cfg(test)]
 #[macro_use]
@@ -12,7 +12,7 @@ mod escape;
 mod lexer;
 mod parser;
 
-use color::colorize;
+use color::{colorize, Options};
 use error::ErrorReport;
 use escape::escape;
 
@@ -104,17 +104,22 @@ impl ColorizeError {
 /// - There is currently no way to remove text decorations from the children of nested markup
 #[pyfunction]
 #[pyo3(name = "colorize")]
-#[pyo3(signature = (source, file="inline", wrap=None))]
-fn py_colorize(source: &str, file: &str, wrap: Option<usize>) -> PyResult<String> {
+#[pyo3(signature = (source, file="inline", wrap=None, supports_color=true))]
+fn py_colorize(
+    source: &str,
+    file: &str,
+    wrap: Option<usize>,
+    supports_color: bool,
+) -> PyResult<String> {
     if let Some(0) = wrap {
         return Err(PyTypeError::new_err("wrap width must be greater than 0"));
     }
 
-    let styled = colorize(source)
+    let styled = colorize(source, Options { supports_color })
         .map_err(|errors| ColorizeError::from_report(errors.into(), source, file))?;
 
     Ok(match wrap {
-        Some(width) => textwrap::fill(&styled, Options::new(width)),
+        Some(width) => textwrap::fill(&styled, WrapOptions::new(width)),
         None => styled,
     })
 }
