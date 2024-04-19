@@ -4,21 +4,39 @@ use crate::{
     parser::Parser,
 };
 
-pub fn colorize(input: &str) -> Result<String, Vec<Error>> {
+#[derive(Clone, Copy, Debug)]
+pub struct Options {
+    pub supports_color: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            supports_color: true,
+        }
+    }
+}
+
+pub fn colorize(input: &str, options: Options) -> Result<String, Vec<Error>> {
     let (tokens, errors) = Parser::new(input).parse();
     if !errors.is_empty() {
         return Err(errors);
     }
 
     let mut result = String::with_capacity(input.len());
-    convert_tokens(&mut result, CurrentStyle::default(), &tokens);
+    convert_tokens(&mut result, CurrentStyle::default(), &tokens, &options);
 
     result.shrink_to_fit();
     Ok(result)
 }
 
 /// Convert the tokens into the resulting string
-fn convert_tokens(output: &mut String, parent_style: CurrentStyle, tokens: &[Token]) {
+fn convert_tokens(
+    output: &mut String,
+    parent_style: CurrentStyle,
+    tokens: &[Token],
+    options: &Options,
+) {
     for token in tokens {
         match token {
             Token::Content(content) => output.push_str(content),
@@ -27,9 +45,15 @@ fn convert_tokens(output: &mut String, parent_style: CurrentStyle, tokens: &[Tok
                     continue;
                 }
 
-                style.apply(&parent_style, output);
-                convert_tokens(output, parent_style.extend(style), content);
-                style.reset(&parent_style, output);
+                if options.supports_color {
+                    style.apply(&parent_style, output);
+                }
+
+                convert_tokens(output, parent_style.extend(style), content, options);
+
+                if options.supports_color {
+                    style.reset(&parent_style, output);
+                }
             }
         }
     }
@@ -37,12 +61,17 @@ fn convert_tokens(output: &mut String, parent_style: CurrentStyle, tokens: &[Tok
 
 #[cfg(test)]
 mod tests {
-    use super::colorize;
+    use super::{colorize, Options};
     use crate::ast::{Style, Token};
 
     fn convert_tokens(parent_style: Option<Style>, tokens: &[Token]) -> String {
         let mut result = String::new();
-        super::convert_tokens(&mut result, parent_style.unwrap_or_default().into(), tokens);
+        super::convert_tokens(
+            &mut result,
+            parent_style.unwrap_or_default().into(),
+            tokens,
+            &Options::default(),
+        );
         result
     }
 
@@ -416,146 +445,149 @@ mod tests {
 
     #[test]
     fn colorize_empty_source() {
-        let result = colorize("").unwrap();
+        let result = colorize("", Options::default()).unwrap();
         assert_eq!(result, "");
     }
 
     #[test]
     fn colorize_source_with_no_styled_content() {
-        let result = colorize("unstyled content").unwrap();
+        let result = colorize("unstyled content", Options::default()).unwrap();
         assert_eq!(result, "unstyled content");
     }
 
     #[test]
     fn colorize_styled_content_spanning_entire_source() {
-        let result = colorize("[fg:black](content)").unwrap();
+        let result = colorize("[fg:black](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[30mcontent\x1b[39m");
     }
 
     #[test]
     fn colorize_styled_content_starting_at_beginning() {
-        let result = colorize("[fg:black](content) unstyled").unwrap();
+        let result = colorize("[fg:black](content) unstyled", Options::default()).unwrap();
         assert_eq!(result, "\x1b[30mcontent\x1b[39m unstyled");
     }
 
     #[test]
     fn colorize_styled_content_starting_in_middle() {
-        let result = colorize("leading [fg:black](content) trailing").unwrap();
+        let result = colorize("leading [fg:black](content) trailing", Options::default()).unwrap();
         assert_eq!(result, "leading \x1b[30mcontent\x1b[39m trailing");
     }
 
     #[test]
     fn colorize_styled_content_starting_at_end() {
-        let result = colorize("leading [fg:black](content)").unwrap();
+        let result = colorize("leading [fg:black](content)", Options::default()).unwrap();
         assert_eq!(result, "leading \x1b[30mcontent\x1b[39m");
     }
 
     #[test]
     fn colorize_styled_with_foreground() {
-        let result = colorize("[fg:red](content)").unwrap();
+        let result = colorize("[fg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31mcontent\x1b[39m");
     }
 
     #[test]
     fn colorize_styled_with_background() {
-        let result = colorize("[bg:red](content)").unwrap();
+        let result = colorize("[bg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[41mcontent\x1b[49m");
     }
 
     #[test]
     fn colorize_styled_with_decoration() {
-        let result = colorize("[deco:bold](content)").unwrap();
+        let result = colorize("[deco:bold](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[1mcontent\x1b[22m");
     }
 
     #[test]
     fn colorize_styled_with_foreground_and_background() {
-        let result = colorize("[fg:red;bg:white](content)").unwrap();
+        let result = colorize("[fg:red;bg:white](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47mcontent\x1b[39;49m");
     }
 
     #[test]
     fn colorize_styled_with_foreground_and_decoration() {
-        let result = colorize("[fg:red;deco:bold](content)").unwrap();
+        let result = colorize("[fg:red;deco:bold](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;1mcontent\x1b[39;22m");
     }
 
     #[test]
     fn colorize_styled_with_decoration_and_background() {
-        let result = colorize("[deco:bold;bg:white](content)").unwrap();
+        let result = colorize("[deco:bold;bg:white](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[47;1mcontent\x1b[49;22m");
     }
 
     #[test]
     fn colorize_styled_with_background_and_foreground() {
-        let result = colorize("[bg:white;fg:red](content)").unwrap();
+        let result = colorize("[bg:white;fg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47mcontent\x1b[39;49m");
     }
 
     #[test]
     fn colorize_styled_with_decoration_and_foreground() {
-        let result = colorize("[deco:bold;fg:red](content)").unwrap();
+        let result = colorize("[deco:bold;fg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;1mcontent\x1b[39;22m");
     }
 
     #[test]
     fn colorize_styled_with_background_and_decoration() {
-        let result = colorize("[bg:white;deco:bold](content)").unwrap();
+        let result = colorize("[bg:white;deco:bold](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[47;1mcontent\x1b[49;22m");
     }
 
     #[test]
     fn colorize_styled_with_foreground_background_and_decoration() {
-        let result = colorize("[fg:red;bg:white;deco:bold](content)").unwrap();
+        let result = colorize("[fg:red;bg:white;deco:bold](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_styled_with_foreground_decoration_and_background() {
-        let result = colorize("[fg:red;deco:bold;bg:white](content)").unwrap();
+        let result = colorize("[fg:red;deco:bold;bg:white](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_styled_with_background_foreground_and_decoration() {
-        let result = colorize("[bg:white;fg:red;deco:bold](content)").unwrap();
+        let result = colorize("[bg:white;fg:red;deco:bold](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_styled_with_background_decoration_and_foreground() {
-        let result = colorize("[bg:white;deco:bold;fg:red](content)").unwrap();
+        let result = colorize("[bg:white;deco:bold;fg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_styled_with_decoration_foreground_and_background() {
-        let result = colorize("[deco:bold;fg:red;bg:white](content)").unwrap();
+        let result = colorize("[deco:bold;fg:red;bg:white](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_styled_with_decoration_background_and_foreground() {
-        let result = colorize("[deco:bold;bg:white;fg:red](content)").unwrap();
+        let result = colorize("[deco:bold;bg:white;fg:red](content)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31;47;1mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_token_not_produced_for_content_with_zero_length() {
-        let result = colorize("[fg:red]()").unwrap();
+        let result = colorize("[fg:red]()", Options::default()).unwrap();
         assert_eq!(result, "");
     }
 
     #[test]
     fn colorize_two_spans_of_styled_text_back_to_back() {
-        let result = colorize("[fg:red](first)[fg:blue](second)").unwrap();
+        let result = colorize("[fg:red](first)[fg:blue](second)", Options::default()).unwrap();
         assert_eq!(result, "\x1b[31mfirst\x1b[39m\x1b[34msecond\x1b[39m");
     }
 
     #[test]
     fn colorize_spans_of_styled_text_interleaved_with_unstyled_text() {
-        let result =
-            colorize("leading [fg:red](styled one) middle [fg:blue](styled two) trailing").unwrap();
+        let result = colorize(
+            "leading [fg:red](styled one) middle [fg:blue](styled two) trailing",
+            Options::default(),
+        )
+        .unwrap();
         assert_eq!(
             result,
             "leading \x1b[31mstyled one\x1b[39m middle \x1b[34mstyled two\x1b[39m trailing"
@@ -564,15 +596,43 @@ mod tests {
 
     #[test]
     fn colorize_when_style_tags_are_repeated_the_last_occurrence_takes_precedence() {
-        let result =
-            colorize("[fg:black;bg:white;deco:bold;fg:white;bg:black;deco:faint](content)")
-                .unwrap();
+        let result = colorize(
+            "[fg:black;bg:white;deco:bold;fg:white;bg:black;deco:faint](content)",
+            Options::default(),
+        )
+        .unwrap();
         assert_eq!(result, "\x1b[37;40;2mcontent\x1b[39;49;22m");
     }
 
     #[test]
     fn colorize_nested_styled_spans_produce_multiple_styled_tokens() {
-        let result = colorize("user: [deco:bold](hi [fg:red](there)!)").unwrap();
+        let result =
+            colorize("user: [deco:bold](hi [fg:red](there)!)", Options::default()).unwrap();
         assert_eq!(result, "user: \x1b[1mhi \x1b[31mthere\x1b[39m!\x1b[22m");
+    }
+
+    #[test]
+    fn colorize_kitchen_sink() {
+        let result = colorize(
+            "leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing",
+            Options::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            result,
+            "leading \x1b[31mone \x1b[44mtwo \x1b[2mthree\x1b[22m two\x1b[49m one\x1b[39m trailing"
+        );
+    }
+
+    #[test]
+    fn colorize_kitchen_sink_color_disabled() {
+        let result = colorize(
+            "leading [fg:red](one [bg:blue](two [deco:dim](three) two) one) trailing",
+            Options {
+                supports_color: false,
+            },
+        )
+        .unwrap();
+        assert_eq!(result, "leading one two three two one trailing");
     }
 }
