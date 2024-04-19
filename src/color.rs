@@ -24,19 +24,18 @@ pub fn colorize(input: &str, options: Options) -> Result<String, Vec<Error>> {
     }
 
     let mut result = String::with_capacity(input.len());
-    convert_tokens(&mut result, CurrentStyle::default(), &tokens, &options);
+    if options.supports_color {
+        convert_tokens(&mut result, CurrentStyle::default(), &tokens);
+    } else {
+        convert_tokens_no_color(&mut result, &tokens);
+    }
 
     result.shrink_to_fit();
     Ok(result)
 }
 
 /// Convert the tokens into the resulting string
-fn convert_tokens(
-    output: &mut String,
-    parent_style: CurrentStyle,
-    tokens: &[Token],
-    options: &Options,
-) {
+fn convert_tokens(output: &mut String, parent_style: CurrentStyle, tokens: &[Token]) {
     for token in tokens {
         match token {
             Token::Content(content) => output.push_str(content),
@@ -45,15 +44,25 @@ fn convert_tokens(
                     continue;
                 }
 
-                if options.supports_color {
-                    style.apply(&parent_style, output);
+                style.apply(&parent_style, output);
+                convert_tokens(output, parent_style.extend(style), content);
+                style.reset(&parent_style, output);
+            }
+        }
+    }
+}
+
+/// Convert the tokens into the resulting string without applying styles
+fn convert_tokens_no_color(output: &mut String, tokens: &[Token]) {
+    for token in tokens {
+        match token {
+            Token::Content(content) => output.push_str(content),
+            Token::Styled { content, .. } => {
+                if content.is_empty() {
+                    continue;
                 }
 
-                convert_tokens(output, parent_style.extend(style), content, options);
-
-                if options.supports_color {
-                    style.reset(&parent_style, output);
-                }
+                convert_tokens_no_color(output, content);
             }
         }
     }
@@ -66,12 +75,7 @@ mod tests {
 
     fn convert_tokens(parent_style: Option<Style>, tokens: &[Token]) -> String {
         let mut result = String::new();
-        super::convert_tokens(
-            &mut result,
-            parent_style.unwrap_or_default().into(),
-            tokens,
-            &Options::default(),
-        );
+        super::convert_tokens(&mut result, parent_style.unwrap_or_default().into(), tokens);
         result
     }
 
