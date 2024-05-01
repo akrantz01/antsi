@@ -15,7 +15,7 @@ indexmap = "2.2"
 logos = "0.14"
 pyo3 = { version = "0.21.2", features = ["extension-module", "abi3-py310"] }
 termcolor = "1"
-text-size = "1.1"
+text-size = "1.1.1"
 textwrap = "0.16"
 
 [dev-dependencies]
