@@ -135,7 +135,7 @@ fn py_escape(source: &str) -> String {
 #[pymodule]
 #[pyo3(name = "_antsi")]
 fn antsi(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add("ColorizeError", m.py().get_type_bound::<ColorizeError>())?;
+    m.add("ColorizeError", m.py().get_type::<ColorizeError>())?;
     m.add_function(wrap_pyfunction!(py_colorize, m)?)?;
     m.add_function(wrap_pyfunction!(py_escape, m)?)?;
     Ok(())
